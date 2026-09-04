@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "d1623bdb-23e7-4896-8c6d-4e1580055aec",
+      "question": "copy detection에서 DINO ViT-B/8의 성능은?",
+      "answer": "$320^2$ 해상도에서 mAP 85.4를 기록해, 객체 검색 전용으로 학습된 Multigrain 모델(82.5)이나 감독 학습 ViT-B/16(76.4)을 능가한다."
+    },
+    {
+      "id": "314de358-1a98-4ab6-a7bf-cb192ecf6bad",
+      "question": "DAVIS-2017 비디오 객체 분할 평가는 어떻게 수행되었는가?",
+      "answer": "출력 patch 토큰을 평가하며, Jabri 등의 프로토콜을 따라 연속 프레임 간 최근접 이웃으로 장면을 분할한다. 특징 위에 어떤 모델도 학습하지 않고 가중치도 finetuning하지 않으며 480p 해상도를 사용한다."
+    },
+    {
+      "id": "f0908390-9027-4bdb-90ab-ca94bd076531",
+      "question": "DAVIS 2017에서 패치 크기의 영향은?",
+      "answer": "작은 패치(\"/8\") 변형이 훨씬 좋은 성능을 낸다. ViT-B의 경우 $(\\mathcal{J}\\&\\mathcal{F})_m$ 기준 +9.1% 향상되며, DINO ViT-B/8은 71.4를 기록한다."
+    },
+    {
+      "id": "927e3fc0-33e9-41cf-9fc0-93aadba5917e",
+      "question": "DAVIS 평가 결과가 시사하는 특징의 성질은?",
+      "answer": "학습 목적이나 아키텍처가 dense task용으로 설계되지 않았음에도 경쟁력 있는 성능을 낸다. 네트워크를 finetuning하지 않았으므로 모델 출력이 공간 정보(spatial information)를 보존하고 있음을 뜻한다."
+    },
+    {
+      "id": "46228bcd-6e3c-4c79-89e7-c5c992b32a19",
+      "question": "self-attention 마스크의 품질은 어떤 지표로 측정했는가?",
+      "answer": "self-attention map을 임계값 처리해 질량의 60%를 유지하는 마스크를 만들고, 정답과의 Jaccard similarity를 측정한다. attention map은 부드럽고 마스크 생성을 위해 최적화된 것이 아님에도 감독 모델과 큰 차이를 보인다."
+    },
+    {
+      "id": "3c6e7242-c158-4d52-a110-f94852d1e54c",
+      "question": "Figure 4의 Jaccard similarity 결과는?",
+      "answer": "ViT-S/16 기준 random 22.0, supervised 27.3, DINO 45.9이다. ViT-S/8에서는 random 21.8, supervised 23.7, DINO 44.7로 DINO가 크게 앞선다."
+    },
+    {
+      "id": "271d52cf-aa2b-4011-bc03-7a7d71a84c1a",
+      "question": "여러 attention head는 서로 어떻게 다른 역할을 하는가?",
+      "answer": "마지막 층의 서로 다른 head들이 이미지의 서로 다른 의미 영역에 주목한다. 가려진 객체(덤불)나 작은 객체(깃발)에도 주목하며, ViT-S/8을 480p로 보면 3601개 토큰 시퀀스가 된다."
+    },
+    {
+      "id": "dda34895-1ed0-4604-aac2-5fe2e75bf674",
+      "question": "transfer learning 실험에서 DINO 사전학습의 효과는?",
+      "answer": "ViT 아키텍처에서 자기지도 사전학습이 감독 사전학습보다 더 잘 전이된다. 특히 ImageNet에서 +1~2% 향상되며, ViT-S/16 기준 Cifar100 89.5→90.5, INat18 70.7→72.0 등으로 개선된다."
+    },
+    {
+      "id": "92a6539c-0ff8-4c6b-b96e-01b4f7dbf3d4",
+      "question": "Ablation(Table 7)에서 momentum이 없을 때 어떤 일이 일어나는가?",
+      "answer": "momentum이 없으면 프레임워크가 전혀 동작하지 않는다(k-NN 0.1%). 이 경우 붕괴를 막으려면 Sinkhorn-Knopp 같은 더 고급 연산이 필요하다."
+    },
+    {
+      "id": "daeb4a26-cb09-4925-9646-5de361f35078",
+      "question": "momentum이 있을 때 Sinkhorn-Knopp(SK)를 추가하면?",
+      "answer": "영향이 거의 없다(k-NN 72.8 → 72.2, linear 76.1 → 76.0). 즉 momentum encoder가 있으면 SK가 불필요하다."
+    },
+    {
+      "id": "d0d2c6df-4ec0-4724-a923-3d6af2ce0b72",
+      "question": "Table 7에서 multi-crop과 손실 함수를 제거하면 성능은 어떻게 변하는가?",
+      "answer": "multi-crop을 빼면 k-NN 72.8 → 67.9로 떨어지고, cross-entropy 대신 MSE를 쓰면 72.8 → 52.6으로 크게 하락한다. 두 요소 모두 좋은 특징을 얻는 데 중요하다."
+    },
+    {
+      "id": "2b6eca95-1fcb-48af-9b4d-3e0dbe7612c1",
+      "question": "student에 predictor를 추가하면 DINO와 BYOL에서 각각 어떤 효과가 있는가?",
+      "answer": "DINO에서는 영향이 거의 없다(k-NN 72.8 → 71.8). 반면 BYOL에서는 붕괴를 막기 위해 predictor가 결정적으로 중요하다."
+    },
+    {
+      "id": "30bd2d76-28d1-4ce2-97d5-c11e15ae7662",
+      "question": "Table 7의 약어 SK, MC, Pred., CE, MSE, INCE는 각각 무엇인가?",
+      "answer": "SK는 Sinkhorn-Knopp, MC는 Multi-Crop, Pred.는 Predictor를 뜻한다. CE는 Cross-Entropy, MSE는 Mean Square Error, INCE는 InfoNCE이다."
+    },
+    {
+      "id": "d0604838-05f9-4f56-b105-2e8c1047bbf6",
+      "question": "패치 크기를 16×16, 8×8, 5×5로 줄였을 때의 성능과 대가는?",
+      "answer": "패치를 줄일수록 성능이 크게 향상되며 추가 파라미터도 필요 없다. 그러나 처리량이 희생되어 5×5 패치는 44 im/s, 8×8 패치는 180 im/s로 떨어진다."
+    },
+    {
+      "id": "21e91943-cdb8-49fe-bcff-f7970424f186",
+      "question": "student의 이전 epoch/이전 iteration을 teacher로 쓰면 어떻게 되는가?",
+      "answer": "이전 iteration이나 student의 복사본을 teacher로 쓰면 수렴하지 않으며 더 많은 정규화가 필요하다. 반면 이전 epoch의 student를 쓰면 붕괴하지 않고 MoCo-v2나 BYOL에 견줄 만한 k-NN 성능을 낸다."
+    },
+    {
+      "id": "e7aa078c-d10e-4ff0-b693-06f5825adf69",
+      "question": "학습 동역학 분석에서 관찰된 momentum teacher의 특징은?",
+      "answer": "teacher가 학습 내내 student를 지속적으로 능가하며, ResNet-50에서도 같은 행동이 관찰된다. 이는 momentum을 쓰는 다른 프레임워크(MoCo, BYOL)나 이전 epoch 기반 teacher에서는 관찰되지 않았다."
+    },
+    {
+      "id": "197bf195-7efa-4864-93c5-0e1abda2b7a8",
+      "question": "teacher가 student보다 낫다는 사실이 만드는 선순환은?",
+      "answer": "student보다 나은 teacher를 타깃으로 삼으므로 student의 표현이 개선된다. teacher는 student 가중치로부터 직접 만들어지므로 결과적으로 teacher도 함께 개선된다."
+    },
+    {
+      "id": "1820d150-6d5e-47bb-aa58-bf62257ae688",
+      "question": "붕괴(collapse)의 두 가지 형태는 무엇인가?",
+      "answer": "입력과 무관하게 모델 출력이 모든 차원에 걸쳐 균등(uniform)해지거나, 반대로 한 차원이 지배하는 경우이다. centering은 후자를, sharpening은 전자를 막는다."
+    },
+    {
+      "id": "c68c213e-9e78-4cfe-90fb-128b4ef4a31d",
+      "question": "붕괴 분석에서 cross-entropy는 어떻게 분해되는가?",
+      "answer": "$$H(P_t, P_s) = h(P_t) + D_{KL}(P_t|P_s)$$ 즉 엔트로피 $h$와 KL divergence의 합으로 분해된다. KL이 0이면 출력이 상수라는 뜻이므로 붕괴를 의미한다."
+    },
+    {
+      "id": "50414dcf-f47b-4502-8570-dceb211f1f7b",
+      "question": "centering이나 sharpening 중 하나만 적용하면 엔트로피는 어떻게 되는가?",
+      "answer": "두 경우 모두 KL이 0으로 수렴해 붕괴하지만 엔트로피 $h$는 서로 다른 값으로 수렴한다. centering 없이는 0으로, sharpening 없이는 $-\\log(1/K)$로 수렴해 서로 다른 형태의 붕괴임을 보여준다."
+    }
+  ]
+}

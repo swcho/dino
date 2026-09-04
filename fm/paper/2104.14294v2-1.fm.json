@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "fa6aa28c-426c-42ff-aef4-2f9a9acf3ca6",
+      "question": "DINO 논문의 제목과 핵심 질문은 무엇인가?",
+      "answer": "제목은 \"Emerging Properties in Self-Supervised Vision Transformers\"이다. 자기지도학습(SSL)이 Vision Transformer(ViT)에 convnet과 차별화되는 새로운 성질을 부여하는지를 묻는다."
+    },
+    {
+      "id": "7dd5a7a5-2905-41b2-a88b-51369ef5439a",
+      "question": "DINO라는 이름은 무엇의 약자인가?",
+      "answer": "self-**di**stillation with **no** labels(레이블 없는 자기증류)에서 유래했다. 지식 증류(knowledge distillation)의 한 형태로 해석되지만 레이블을 전혀 쓰지 않는다는 뜻이다."
+    },
+    {
+      "id": "a7a657e8-e62a-4fe1-a9f6-b08640b47c4a",
+      "question": "자기지도학습된 ViT 특징에서 발견된 두 가지 핵심 성질은?",
+      "answer": "첫째, 특징이 이미지의 semantic segmentation 정보(장면 레이아웃과 객체 경계)를 명시적으로 담고 있으며 마지막 블록의 self-attention에서 직접 접근 가능하다. 둘째, 특징이 뛰어난 k-NN 분류기로 작동해 작은 ViT로 ImageNet top-1 78.3%를 달성한다."
+    },
+    {
+      "id": "cc3aa186-1a38-4692-9001-d03e0bd3cc70",
+      "question": "DINO가 ImageNet linear evaluation에서 달성한 최고 성능은?",
+      "answer": "ViT-Base에 8×8 패치를 사용해 top-1 80.1%를 달성했다. 같은 모델의 k-NN 성능은 77.4%이다."
+    },
+    {
+      "id": "32836c1a-61b0-4fff-b83e-1fc139991186",
+      "question": "논문이 강조하는, 좋은 성능을 위해 중요하다고 밝힌 세 가지 구성요소는?",
+      "answer": "momentum encoder, multi-crop training, 그리고 ViT에서 작은 패치(small patches)의 사용이다. 특히 k-NN 성능은 momentum encoder와 multi-crop이 결합될 때만 잘 나타난다."
+    },
+    {
+      "id": "a967705b-c5e9-4fcf-829c-1079387397a6",
+      "question": "Figure 1에서 보여주는 self-attention 시각화의 의미는?",
+      "answer": "감독 없이 학습된 ViT의 마지막 층에서 [CLS] 토큰의 self-attention을 본 것이다. 이 토큰은 어떤 레이블이나 감독에도 연결되어 있지 않은데도 클래스 특화 특징을 학습해 비지도 객체 분할이 나타난다."
+    },
+    {
+      "id": "1b63869a-950f-469a-ad00-3bae55c26112",
+      "question": "저자들이 ViT의 성공이 제한적이었던 이유로 제기한 가설은?",
+      "answer": "ViT 사전학습에 감독(supervision)을 사용했기 때문이라는 가설이다. NLP에서 Transformer의 성공은 BERT의 cloze나 GPT의 language modeling 같은 자기지도 사전학습이 핵심이었다는 점에서 착안했다."
+    },
+    {
+      "id": "55245d81-e47b-4f9d-a071-091aaf8fd059",
+      "question": "이미지 수준 감독(image-level supervision)의 한계는 무엇인가?",
+      "answer": "이미지에 담긴 풍부한 시각 정보를 미리 정의된 수천 개 카테고리 중 하나의 개념으로 축소해버린다. 반면 자기지도 pretext task는 훨씬 풍부한 학습 신호를 제공한다."
+    },
+    {
+      "id": "33840788-1fae-4e8d-9896-09bff523e699",
+      "question": "기존 ViT가 convnet 대비 가지고 있던 단점 세 가지는?",
+      "answer": "계산량이 더 많고, 더 많은 학습 데이터를 요구하며, 특징이 고유한 성질을 보이지 않는다는 점이다."
+    },
+    {
+      "id": "0f5357ff-534c-4826-9dab-144b65b5adb7",
+      "question": "instance classification 계열 자기지도학습의 기본 아이디어와 확장성 문제는?",
+      "answer": "각 이미지를 서로 다른 클래스로 보고 데이터 증강까지 포함해 이들을 구별하도록 학습한다. 그러나 모든 이미지를 구별하는 분류기를 명시적으로 학습하는 방식은 이미지 수가 늘어나면 확장성이 나쁘다."
+    },
+    {
+      "id": "5ab6361d-b767-41cb-8e9d-488070959c64",
+      "question": "Wu 등이 제안한 NCE 방식의 장점과 단점은?",
+      "answer": "이미지를 분류하는 대신 noise contrastive estimator로 인스턴스를 비교한다. 단점은 많은 이미지의 특징을 동시에 비교해야 해서 큰 배치나 memory bank가 필요하다는 점이다."
+    },
+    {
+      "id": "3da36d74-bea0-47d3-9438-fe3ea9f39143",
+      "question": "BYOL의 핵심 아이디어는 무엇이며 DINO와 어떻게 다른가?",
+      "answer": "BYOL은 momentum encoder로 얻은 표현에 특징을 맞추는 metric-learning 형태의 방법이다. DINO는 BYOL에서 영감을 받았지만 다른 유사도 매칭 손실(cross-entropy)을 쓰고 student와 teacher가 완전히 동일한 아키텍처를 사용한다."
+    },
+    {
+      "id": "e724edd6-1407-4261-a65d-0d4ae31075fb",
+      "question": "self-training과 knowledge distillation의 관계는?",
+      "answer": "self-training은 소량의 초기 주석을 대량의 비레이블 데이터로 전파하는 방식이며, soft label을 쓸 때 이를 knowledge distillation이라 부른다. Xie 등은 distillation으로 soft pseudo-label을 전파할 수 있음을 보여 둘 사이의 본질적 연결을 만들었다."
+    },
+    {
+      "id": "6ca78cdb-2402-4980-8a84-deeabc107837",
+      "question": "기존의 SSL+distillation 연구와 DINO의 결정적 차이는?",
+      "answer": "기존 연구들은 사전학습된 고정(fixed) teacher에 의존하지만, DINO의 teacher는 학습 중에 동적으로 만들어진다. 따라서 distillation이 사후 처리 단계가 아니라 자기지도 목적함수 그 자체로 사용된다."
+    },
+    {
+      "id": "d8324dac-43fd-4c34-b2bd-b44d7f50b9bb",
+      "question": "codistillation과 DINO의 차이는?",
+      "answer": "codistillation은 student와 teacher가 같은 아키텍처를 쓰며 학습 중 distillation을 하지만, teacher도 student로부터 증류를 받는다. DINO에서는 teacher가 student의 평균(EMA)으로만 갱신된다."
+    },
+    {
+      "id": "c4c6611c-12a8-4622-a7b4-7c32cc2ad85f",
+      "question": "지식 증류(knowledge distillation)의 기본 수식 설정을 설명하라.",
+      "answer": "student $g_{\\theta_s}$가 teacher $g_{\\theta_t}$의 출력을 따라가도록 학습한다. 두 네트워크 모두 입력 $x$에 대해 $K$차원 확률분포 $P_s$, $P_t$를 출력하며, 이는 네트워크 출력을 softmax로 정규화해 얻는다."
+    },
+    {
+      "id": "c1ed0677-798b-46c0-875f-0d298bcc2485",
+      "question": "DINO에서 student의 출력 확률 $P_s$는 어떻게 계산되는가?",
+      "answer": "$$P_s(x)^{(i)} = \\frac{\\exp(g_{\\theta_s}(x)^{(i)}/\\tau_s)}{\\sum_{k=1}^K \\exp(g_{\\theta_s}(x)^{(k)}/\\tau_s)}$$ 여기서 $\\tau_s > 0$는 출력 분포의 sharpness를 조절하는 temperature이다. teacher도 $\\tau_t$로 동일한 형태의 식을 쓴다."
+    },
+    {
+      "id": "b40a4515-ceec-414c-8121-9ed3c71e24ae",
+      "question": "temperature 파라미터 $\\tau$는 출력 분포에 어떤 영향을 주는가?",
+      "answer": "출력 분포의 sharpness(뾰족한 정도)를 조절한다. $\\tau$가 작을수록 분포가 뾰족해지며, $\\tau \\rightarrow 0$은 argmax 연산에 해당해 one-hot 하드 분포가 된다."
+    },
+    {
+      "id": "0ef3c303-80f3-4558-8fe8-8f8e0c4afc95",
+      "question": "고정된 teacher가 주어졌을 때 DINO의 기본 학습 목적은?",
+      "answer": "student 파라미터 $\\theta_s$에 대해 cross-entropy를 최소화한다: $\\min_{\\theta_s} H(P_t(x), P_s(x))$, 여기서 $H(a,b) = -a\\log b$이다."
+    },
+    {
+      "id": "4ad870b2-2e6b-49c4-820f-2a3feeb1d31a",
+      "question": "multi-crop 전략에서 global view와 local view는 각각 어떻게 구성되는가?",
+      "answer": "global view는 2개이며 해상도 $224^2$로 원본 이미지의 큰 영역(예: 50% 초과)을 덮는다. local view는 여러 개이며 해상도 $96^2$로 작은 영역(예: 50% 미만)만 덮는다."
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "a44ad25e-7d6a-4a8b-8f95-a8586fa15412",
+      "question": "DINO projection head의 활성함수와 정규화 설계는?",
+      "answer": "hidden layer는 2048차원이며 GELU 활성함수를 쓰되 MLP의 마지막 층에는 GELU를 적용하지 않는다. 이후 $\\ell_2$ 정규화와 weight-normalized FC layer($K$차원)를 적용하며 batch normalization은 쓰지 않는다."
+    },
+    {
+      "id": "71c6f4e9-be29-48d9-830e-7d2153e2221d",
+      "question": "projection head에서 BN 사용 여부의 실험 결과는?",
+      "answer": "ViT-S 100 epoch 기준 BN 없는 head가 k-NN 69.7%, BN 있는 head가 68.6%이다. 즉 BN을 빼는 것이 오히려 약간 더 좋다."
+    },
+    {
+      "id": "9c945c38-8263-4248-bd59-e7c819f03a9e",
+      "question": "$\\ell_2$-normalization bottleneck의 역할은?",
+      "answer": "projection head를 깊게 쌓을 때 학습을 안정화한다. bottleneck이 없으면 층을 늘릴수록 학습이 실패하지만(4층에서 61.0%), 있으면 깊이가 늘수록 정확도가 향상된다(4층에서 69.3%)."
+    },
+    {
+      "id": "3ad52526-1fb5-4b00-ac02-e516c6181bdf",
+      "question": "DINO projection head의 기본 층 수 구성은?",
+      "answer": "총 4개의 linear layer를 사용하며, 3개는 MLP에 있고 1개는 $\\ell_2$ bottleneck 뒤에 있다."
+    },
+    {
+      "id": "02616300-ca63-45c9-a1ec-fbdde0e1ba2d",
+      "question": "출력 차원 $K$의 영향과 기본값은?",
+      "answer": "큰 출력 차원일수록 성능이 향상되며, $\\ell_2$ bottleneck 덕분에 파라미터 증가를 적게 유지하면서 큰 차원을 쓸 수 있다. 기본값은 $K = 65536$이고 bottleneck 차원은 $d = 256$이다."
+    },
+    {
+      "id": "b0d70fd6-d7d0-47cb-af56-43daf2e3608e",
+      "question": "projection head에서 GELU 대신 ReLU를 쓰면?",
+      "answer": "영향이 비교적 작다(k-NN 69.7% → 68.9%). ViT가 기본적으로 GELU를 쓰므로 아키텍처 일관성을 위해 GELU를 선택했다."
+    },
+    {
+      "id": "c895b447-abc9-4dc6-9f31-5e6b9ccd5abf",
+      "question": "online centering의 smoothing 파라미터 $m$에 대한 강건성은?",
+      "answer": "넓은 범위에서 수렴이 강건하다($m$=0에서 69.1%, 0.9에서 69.7%, 0.99에서 69.4%). 갱신이 너무 느릴 때, 즉 $m = 0.999$에서만 붕괴한다(0.1%)."
+    },
+    {
+      "id": "2ffce2ba-af6a-40e2-b4c7-3d28bd0851c2",
+      "question": "teacher temperature $\\tau_t$의 임계값과 실무 처방은?",
+      "answer": "붕괴를 피하려면 0.06보다 낮은 temperature가 필요하며, 그보다 높으면 학습 손실이 $\\ln(K)$로 수렴한다. 다만 작은 값에서 시작해 초기 epoch 동안 올리면 붕괴하지 않으므로 실제로는 첫 30 epoch 동안 0.04에서 0.07로 선형 warmup한다."
+    },
+    {
+      "id": "d656ce0f-f2f8-44cb-a904-b8d4fe7a34ef",
+      "question": "학습 길이(epoch)가 DINO ViT-S 성능에 미치는 영향은?",
+      "answer": "길게 학습할수록 좋아진다: 100 epoch 70.9%, 300 epoch 72.8%, 800 epoch 74.5%(k-NN). 반면 BYOL은 ViT-S에서 300 epoch를 넘기면 오히려 나빠져 Table 2에서 300 epoch 결과를 보고했다."
+    },
+    {
+      "id": "cccf79b1-9db2-4d8f-856e-8deebb5c26c2",
+      "question": "80% 질량 임계값 마스크의 Jaccard 유사도 비교 결과가 시사하는 바는?",
+      "answer": "random 22.0, supervised 27.3인 반면 DINO 45.9, MoCo-v2 46.3, BYOL 47.8, SwAV 46.8로 자기지도 방법 전반이 높다. 즉 self-attention map이 장면 레이아웃과 객체 경계를 담는 성질은 여러 자기지도 방법에 걸쳐 공통적으로 관찰된다."
+    },
+    {
+      "id": "36584183-fe61-443a-b59f-db4a42197cce",
+      "question": "ViT-S의 head 개수를 늘리면 어떤 트레이드오프가 있는가?",
+      "answer": "head를 6→16개로 늘리면 k-NN이 72.8%에서 73.8%로 향상되지만 처리량은 1007에서 860 im/s로 감소한다. 파라미터 수는 21M으로 동일하며, 논문의 모든 실험은 기본 DeiT-S(6 heads)로 수행되었다."
+    },
+    {
+      "id": "1d60843d-10e6-4cbf-bc05-1aa423be5d45",
+      "question": "multi-crop의 스케일 범위 파라미터 $s$는 어떻게 설정되는가?",
+      "answer": "`RandomResizedCrop`으로 global view 2개를 $(s, 1)$ 범위에서 뽑아 $224^2$로, local view 6개를 $(0.05, s)$ 범위에서 뽑아 $96^2$로 리사이즈한다. 실험상 최적값은 약 0.3 부근으로 SwAV의 0.14보다 높다."
+    },
+    {
+      "id": "5b317734-a7b4-4d9d-a92e-d2d558501d2d",
+      "question": "multi-crop 유무에 따른 프레임워크별 성능 변화(ViT-S/16, 300 epoch)는?",
+      "answer": "DINO는 k-NN 67.9→72.7, linear 72.5→75.9로 가장 큰 이득을 본다(+3.4% linear). 반면 BYOL은 66.6→59.8, 71.4→64.8로 오히려 하락한다."
+    },
+    {
+      "id": "322915fa-ed0d-475c-b5a5-b5629feac197",
+      "question": "multi-crop을 \"add-on\"이 아니라 core component로 봐야 하는 이유는?",
+      "answer": "프레임워크마다 multi-crop의 효과가 크게 다르기 때문이다. multi-crop 없이는 DINO의 우위가 약 1%에 불과하지만, multi-crop을 쓰면 격차가 크게 벌어지고 프레임워크 간 순위도 평가 프로토콜에 따라 달라진다."
+    },
+    {
+      "id": "a08dfda5-4264-4f9f-97cb-8377673d0a20",
+      "question": "BYOL에 multi-crop을 적용했을 때 관찰된 실패 패턴은?",
+      "answer": "초기 epoch에는 baseline보다 좋지만 성능 증가율이 둔화되다가 일정 학습 이후 하락한다. 학습률, weight decay, crop 수를 폭넓게 스윕해도 같은 패턴이 반복되었고 ResNet-50에서도 동일했다."
+    },
+    {
+      "id": "72b65c7a-a784-4bf2-b482-65f132a4a865",
+      "question": "linear classification 평가 프로토콜의 세부 설정은?",
+      "answer": "projection head를 제거하고 frozen feature 위에 SGD, 배치 1024로 ImageNet에서 100 epoch 학습한다. weight decay는 쓰지 않고 학습률만 스윕하며, 증강은 random resized crop과 horizontal flip만 적용해 central-crop top-1을 보고한다."
+    },
+    {
+      "id": "7c1936e0-0eaa-412d-83ee-35dc2a3c7806",
+      "question": "ViT-S의 linear evaluation 표현은 어떻게 구성하는가?",
+      "answer": "BERT의 feature-based 평가를 따라 마지막 $l$개 층의 [CLS] 토큰을 연결한다. 실험 결과 $l = 4$(1536차원)가 최적이었다."
+    },
+    {
+      "id": "c7200ab7-b74d-4038-bee3-6ebe8560b8bf",
+      "question": "ViT-B의 linear evaluation 표현은 ViT-S와 어떻게 다른가?",
+      "answer": "마지막 여러 층을 연결해도 이득이 없어 최종 층만($l = 1$) 사용한다. 대신 convnet처럼 출력 patch 토큰에 global average pooling을 적용해 최종 [CLS] 토큰과 연결하며(1536차원), 78.0%에서 78.2%로 향상된다."
+    },
+    {
+      "id": "ef520047-1db1-4f29-af43-f9cc4f551211",
+      "question": "H절의 class representation 시각화는 어떻게 만들어졌는가?",
+      "answer": "각 ImageNet 클래스를 검증 이미지들의 평균 특징 벡터로 표현하고, PCA로 30차원으로 축소한 뒤 perplexity 20, learning rate 200으로 5000 iteration t-SNE를 돌렸다. 결과적으로 새 무리나 개(특히 terrier) 같은 유사 동물 종이 일관된 클러스터를 형성한다."
+    }
+  ]
+}

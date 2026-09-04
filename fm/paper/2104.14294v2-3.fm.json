@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "03439feb-b62c-4f8c-9d8c-d4bf3dfffdde",
+      "question": "ViT의 [CLS] 토큰은 DINO에서 어떤 역할을 하는가?",
+      "answer": "시퀀스 전체의 정보를 집약하는 추가 학습 가능 토큰이며, 그 출력에 projection head $h$를 붙인다. DINO에서는 어떤 레이블이나 감독에도 연결되지 않지만 관례상 [CLS]라 부른다."
+    },
+    {
+      "id": "fe21f9c9-61c9-4385-bd98-a3d447c269aa",
+      "question": "DINO에서 사용한 ViT 구현과 layer normalization 방식은?",
+      "answer": "DeiT의 구현을 따르며 \"pre-norm\" layer normalization을 사용한다. Transformer는 skip connection과 병렬로 놓인 self-attention 및 feed-forward 층의 시퀀스이다."
+    },
+    {
+      "id": "16808e86-5c67-49ef-b7a7-6acedab43e51",
+      "question": "DINO의 주요 학습 하이퍼파라미터(옵티마이저, 배치, 학습률)는?",
+      "answer": "adamw 옵티마이저, 배치 크기 1024(ViT-S/16 사용 시 16 GPU에 분산)를 사용한다. 학습률은 첫 10 epoch 동안 선형 warmup 후 $lr = 0.0005 \\times \\text{batchsize}/256$의 base 값에서 cosine 스케줄로 감쇠한다."
+    },
+    {
+      "id": "13ae2546-73b5-4e13-83e8-a1e17ac3cf90",
+      "question": "DINO의 weight decay와 temperature 스케줄은?",
+      "answer": "weight decay는 0.04에서 0.4까지 cosine 스케줄을 따른다. $\\tau_s$는 0.1로 고정하고 $\\tau_t$는 첫 30 epoch 동안 0.04에서 0.07까지 선형 warmup한다."
+    },
+    {
+      "id": "d17f3bea-92f9-4d7f-97cf-1702e0e2e07d",
+      "question": "DINO가 사용하는 데이터 증강은?",
+      "answer": "BYOL의 증강(color jittering, Gaussian blur, solarization)과 multi-crop을 따른다. 스케일에 맞춰 위치 임베딩을 조정할 때는 bicubic interpolation을 사용한다."
+    },
+    {
+      "id": "be5ad499-220e-4a3f-a5dd-57ec1ff84423",
+      "question": "자기지도학습의 표준 평가 프로토콜 두 가지와 그 문제점은?",
+      "answer": "frozen feature 위에 linear classifier를 학습하거나 다운스트림 태스크에서 finetuning하는 방식이다. 둘 다 하이퍼파라미터에 민감해서 학습률 등을 바꾸면 정확도 분산이 크다는 문제가 있다."
+    },
+    {
+      "id": "fbc97521-3eea-4ec1-8e60-baa21d270aac",
+      "question": "DINO가 추가로 사용하는 k-NN 평가의 절차와 장점은?",
+      "answer": "사전학습 모델을 얼려 다운스트림 학습 데이터의 특징을 저장한 뒤, 테스트 이미지 특징의 k개 최근접 이웃이 투표해 레이블을 정한다. 하이퍼파라미터 튜닝이나 데이터 증강이 필요 없고 데이터셋을 한 번만 통과하면 된다."
+    },
+    {
+      "id": "ab70390f-af1e-41d3-b2bf-a1dd04afb162",
+      "question": "k-NN 평가에서 최적으로 밝혀진 이웃 수 k는?",
+      "answer": "20개(20 NN)가 대부분의 실행에서 일관되게 가장 좋았다."
+    },
+    {
+      "id": "014a03ac-d33c-49de-b5b6-9bc4035d1cf2",
+      "question": "k-NN 분류의 가중 투표 방식은 수식으로 어떻게 정의되는가?",
+      "answer": "클래스 $c$는 총 가중치 $\\sum_{i \\in \\mathcal{N}_k} \\alpha_i \\mathbf{1}_{c_i=c}$를 받는다. 기여 가중치는 $\\alpha_i = \\exp(T_i x/\\tau)$이며 $\\tau = 0.07$로 튜닝하지 않고 사용한다."
+    },
+    {
+      "id": "4a59e82f-acf1-4b51-9357-a0ad0f460b79",
+      "question": "k-NN 평가에서 이미지 표현의 차원은?",
+      "answer": "출력 [CLS] 토큰을 표현으로 사용하며, ViT-S는 $d = 384$, ViT-B는 $d = 768$이다."
+    },
+    {
+      "id": "a13c7db6-3f40-4394-86e6-1ade076e0857",
+      "question": "ResNet-50 아키텍처에서 DINO의 ImageNet linear/k-NN 성능은?",
+      "answer": "linear 75.3%, k-NN 67.5%이다. linear는 SwAV와 동률이지만 k-NN에서는 DCv2(67.1%)를 포함한 모든 비교 대상보다 높다."
+    },
+    {
+      "id": "5a032099-86be-4583-804d-04869c5858ab",
+      "question": "ViT-S 아키텍처에서 DINO는 다른 SSL 방법 대비 얼마나 앞서는가?",
+      "answer": "linear 분류에서 +3.5%, k-NN 평가에서 +7.9% 앞선다(BYOL, MoCov2, SwAV 대비). DINO ViT-S는 linear 77.0%, k-NN 74.5%이다."
+    },
+    {
+      "id": "65dd474b-ad8f-4f35-a9ef-8d2658d39377",
+      "question": "DINO ViT-S에서 특히 놀라운 관찰은 무엇인가?",
+      "answer": "단순한 k-NN 분류기(74.5%)가 linear classifier(77.0%)와 거의 대등하다는 점이다. 이 성질은 DINO를 ViT에 적용할 때만 나타나고 다른 SSL 방법이나 ResNet-50에서는 나타나지 않는다."
+    },
+    {
+      "id": "85ed4daa-21fc-4362-ad6d-48b3965a1f30",
+      "question": "ViT-S가 ResNet-50과 비교 대상으로 선택된 세 가지 근거는?",
+      "answer": "파라미터 수(21M 대 23M), 처리량(1007 대 1237 im/s), 그리고 감독 학습 시 ImageNet 성능(79.8% 대 79.3%)이 비슷하기 때문이다."
+    },
+    {
+      "id": "7c51e740-ced6-4259-a883-93a68350706a",
+      "question": "아키텍처를 키우는 것과 패치 크기를 줄이는 것 중 무엇이 더 효과적인가?",
+      "answer": "패치 크기를 줄이는 것(\"/8\" 변형)이 더 큰 영향을 준다. 패치 축소는 파라미터를 늘리지 않지만 실행 시간이 크게 늘고 메모리 사용량도 커진다."
+    },
+    {
+      "id": "34b9c5f0-6995-4310-bec6-4f88946fa836",
+      "question": "DINO ViT-B/8이 기존 SOTA(SimCLRv2 RN152w3+SK) 대비 갖는 효율성은?",
+      "answer": "linear 80.1%, k-NN 77.4%를 달성하면서 파라미터는 10배 적고 실행 시간은 1.4배 빠르다. SimCLRv2는 794M 파라미터에 46 im/s인 반면 DINO ViT-B/8은 85M 파라미터에 63 im/s이다."
+    },
+    {
+      "id": "0056e625-b5f3-4044-a9e0-28a2e7e7b2a4",
+      "question": "이미지 검색 실험에서 사용한 데이터셋과 평가 지표는?",
+      "answer": "revisited Oxford와 Paris 검색 데이터셋을 사용하며, Medium(M)과 Hard(H) 분할에 대해 mAP를 보고한다. 특징을 얼린 채 k-NN을 직접 적용한다."
+    },
+    {
+      "id": "bce2c599-ca24-4f26-b255-974b596815e8",
+      "question": "GLDv2로 학습한 DINO의 검색 성능이 시사하는 바는?",
+      "answer": "SSL은 주석 없이 어떤 데이터셋으로도 학습할 수 있다는 장점이 있으며, 랜드마크용 GLDv2 1.2M clean set으로 학습한 DINO ViT-S/16은 R Ox M 51.5, R Par M 75.3으로 off-the-shelf 기술자 기반 기존 방법들을 능가한다."
+    },
+    {
+      "id": "3c221414-ccd3-4e9b-b035-4e99fdd504e2",
+      "question": "copy detection 실험의 태스크와 데이터 구성은?",
+      "answer": "INRIA Copydays의 \"strong\" 부분집합에서 blur, insertion, print-and-scan 등으로 왜곡된 이미지를 인식하는 태스크이며 mAP를 보고한다. 선행 연구를 따라 YFCC100M에서 무작위 추출한 10k distractor 이미지를 추가한다."
+    },
+    {
+      "id": "17f7b36f-3a14-465d-a8e4-a6d8e59d3723",
+      "question": "copy detection에서 DINO의 기술자(descriptor)는 어떻게 구성되는가?",
+      "answer": "출력 [CLS] 토큰과 GeM pooling된 출력 patch 토큰을 연결(concatenate)해 ViT-B 기준 1536차원 기술자를 만든다. 그 뒤 whitening을 적용하며, 이 변환은 distractor와 겹치지 않는 YFCC100M의 추가 20K 이미지로 학습한다."
+    }
+  ]
+}

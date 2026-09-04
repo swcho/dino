@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "787a9f26-300c-4ad6-81e6-9f307e0bf6e0",
+      "question": "multi-crop이 정확도/시간 트레이드오프에 미치는 영향의 구체적 수치는?",
+      "answer": "multi-crop 없이($2\\times224^2$) 46시간 학습 시 72.5%인 반면, $2\\times224^2 + 10\\times96^2$ 설정은 24시간 만에 74.6%에 도달한다. 시간은 2배 적고 성능은 +2% 높지만 메모리는 9.3G에서 15.4G로 증가한다."
+    },
+    {
+      "id": "893869d9-c6ee-47e8-8ece-e8d8eb62ceb9",
+      "question": "multi-crop에서 view를 더 늘릴 때의 수확 체감은?",
+      "answer": "$6\\times96^2$에서 $10\\times96^2$로 늘려도 긴 학습에서는 +0.2%에 그친다. 또한 multi-crop이 주는 성능 향상은 $2\\times224^2$ 설정에서 더 오래 학습해도 따라잡을 수 없다."
+    },
+    {
+      "id": "4e8310a0-efc2-4004-a352-b0b0d45ea717",
+      "question": "DINO ViT의 대표적인 계산 요구량은?",
+      "answer": "8-GPU 서버 두 대로 3일 학습해 ImageNet linear 76.1% top-1을 달성한다. 이는 비슷한 크기의 convnet 기반 SOTA 자기지도 시스템을 계산량을 크게 줄이면서 능가하는 결과다."
+    },
+    {
+      "id": "d1ae9e79-b242-4f44-b932-cd917052aac3",
+      "question": "배치 크기에 대한 DINO의 강건성은?",
+      "answer": "작은 배치로도 높은 성능까지 학습할 수 있다. bs=128은 기본 설정 bs=1024보다 약간 낮으며 1 GPU에서 실행되고, bs=8로도 50 epoch 후 35.2%에 도달했다."
+    },
+    {
+      "id": "3dbd2be7-b557-48a6-a6f7-c29bd590165f",
+      "question": "논문 결론에서 제시한 향후 응용 방향 두 가지는?",
+      "answer": "k-NN 분류에서의 우수한 특징 품질은 이미지 검색에 활용될 수 있고, 특징에 담긴 장면 레이아웃 정보는 약지도(weakly supervised) 이미지 분할에 도움이 될 수 있다."
+    },
+    {
+      "id": "fdd6d4d1-f028-421e-ad79-c1909540c144",
+      "question": "논문이 밝히는 가장 중요한 결론은?",
+      "answer": "자기지도학습이 ViT 기반의 BERT 같은 모델을 개발하는 열쇠가 될 수 있다는 증거를 제시했다는 점이다. 향후 무작위 비큐레이션 이미지로 대형 ViT를 DINO로 사전학습하는 방향을 탐구할 계획이다."
+    },
+    {
+      "id": "50feaba1-64b2-40aa-92b7-d9a16310fc99",
+      "question": "부록의 k-NN 평가에서 ViT-S가 ResNet-50 대비 보인 격차는?",
+      "answer": "linear 평가의 평균 격차는 +2.4%인 반면 k-NN 평가의 평균 격차는 +5.6%로 훨씬 크다. 특히 ImageNet 1%에서는 k-NN 기준 +14.1%로 큰 차이를 보인다."
+    },
+    {
+      "id": "93a7f2ca-8ef9-476f-b3d8-92e9c12dcf24",
+      "question": "k-NN 분류기의 실용적 장점은?",
+      "answer": "빠르고 가벼워 배포가 쉬우며 도메인 적응이 전혀 필요 없다. DINO로 학습한 ViT는 특히 k-NN과 잘 결합되는 특징을 제공한다."
+    },
+    {
+      "id": "be7b9ea1-4e33-4650-84de-8e1123b817b1",
+      "question": "감독 ViT-B/16을 DINO로 사전학습하면 어떤 이득이 있는가?",
+      "answer": "무작위 초기화 대비 +1%(81.8% → 82.8%) 성능이 향상된다. 이는 단순히 더 오래 학습해서가 아니며, 감독 사전학습으로 바꾸면 향상되지 않는다."
+    },
+    {
+      "id": "ed8ce943-12b7-4b29-9e5c-ef07f132805f",
+      "question": "DINO 사전학습이 추가 데이터/모델을 쓰는 방법과 비교해 갖는 의미는?",
+      "answer": "자기지도 사전학습은 JFT-300M 같은 추가 데이터로 사전학습하거나 convnet에서 증류한 모델과의 격차를 줄여준다. DINO 82.8%는 RegNetY 증류(83.4%)에 근접한다."
+    },
+    {
+      "id": "8c019295-6988-4f66-b118-85ad98c788b0",
+      "question": "low-shot learning 실험에서 DINO ViT-S/16의 성능은?",
+      "answer": "frozen feature 위에 cyanure로 로지스틱 회귀만 학습해 ImageNet 1%에서 64.5%, 10%에서 72.2%를 얻었다. finetuning이나 데이터 증강 없이도 비슷한 파라미터 수의 준지도학습 SOTA와 대등하다."
+    },
+    {
+      "id": "c8939358-7034-48f7-a815-e2f080f638ae",
+      "question": "Table 13의 방법론 비교에서 convnet과 ViT의 대비는?",
+      "answer": "ResNet-50에서 DINO(74.5/65.6)는 SwAV, BYOL과 비슷한 수준이다. 그러나 ViT-small에서는 DINO(76.1/72.8)가 MoCo-v2, SwAV, BYOL을 linear +4.3%, k-NN +6.2%로 크게 앞선다."
+    },
+    {
+      "id": "f20c4189-dc5f-4ed7-afd6-a00e5f4b0d34",
+      "question": "DINO, MoCo-v2, BYOL의 손실 함수 차이는?",
+      "answer": "DINO는 sharpened softmax 출력에 대한 cross-entropy(CE), MoCo-v2는 InfoNCE contrastive loss(INCE), BYOL은 $\\ell_2$ 정규화 출력에 대한 mean squared error(MSE)를 쓴다. MSE를 쓸 때는 sharpening을 적용하지 않는다."
+    },
+    {
+      "id": "088bd751-652d-4ad0-ad76-4ab2278beecc",
+      "question": "teacher 출력 centering이 BYOL에 적용되었을 때의 관찰은?",
+      "answer": "predictor나 batch normalization 없이도 붕괴를 막아준다(0.1% → 52.6%). 다만 성능 하락이 크며, 이는 centering이 sharpening과 결합되도록 설계되었기 때문으로 보인다."
+    },
+    {
+      "id": "b27203ba-89db-4059-91b9-efe3305d7072",
+      "question": "multi-crop이 각 프레임워크에 미치는 효과의 차이는?",
+      "answer": "DINO와 MoCo-v2에서는 잘 작동해 제거 시 2~4% 성능이 하락한다. 반면 BYOL에 multi-crop을 추가하면 곧바로 작동하지 않아(64.8%로 하락) 추가 조정이 필요하다."
+    },
+    {
+      "id": "4a87164d-1281-4012-8cea-c61b871e9c46",
+      "question": "SwAV와의 비교(Table 15)에서 momentum encoder의 두 가지 역할은?",
+      "answer": "첫째, ViT에서 성능을 크게 향상시킨다(예: 72.2% → 75.8%). 둘째, centering만 사용할 때도 붕괴를 막아준다 — momentum이 없으면 centering만으로는 0.1%로 붕괴한다."
+    },
+    {
+      "id": "c6dfba18-1e3a-4eff-a63d-60262c644dbc",
+      "question": "Softmax(batch) 변형은 무엇이며 어떻게 유도되는가?",
+      "answer": "Sinkhorn-Knopp을 단 1회 반복(num_iters=1)했을 때의 단순화된 형태로, `x = softmax(x/tau, dim=0)` 후 `x /= sum(x, dim=1, keepdim=True)` 두 줄로 구현된다. 직관적으로 배치 축의 softmax는 각 차원(클러스터)이 배치 내 최적 매칭을 선택하게 한다."
+    },
+    {
+      "id": "2d8d1dd7-1682-4593-b7fb-27e97c9f32ab",
+      "question": "저자들이 BYOL, MoCo-v2, SwAV 재현 구현을 검증한 근거는?",
+      "answer": "ResNet-50에서 발표된 수치와 같거나 더 좋았다. BYOL은 300 epoch에서 72.7%(원 논문 72.5%), MoCo는 300 epoch에 71.1%로 원 논문의 800 epoch 결과와 동일했으며, 이는 더 큰 projection head(3층, BN 사용, 256차원) 덕분으로 설명된다."
+    },
+    {
+      "id": "dafb0e39-e289-4ac9-9b45-af088cd8f9dc",
+      "question": "DINO와 UIC(Unsupervised Image Classification)의 관계는?",
+      "answer": "UIC는 이전 epoch의 출력을 하드 pseudo-label로 사용한다. DINO는 붕괴 방지에 centering을 쓰는 반면 UIC는 balanced sampling에 의존하므로, DINO는 momentum teacher를 가진 soft UIC 변형으로 해석할 수 있다."
+    },
+    {
+      "id": "f3155f6b-f8bd-400c-b825-dfd6805773f3",
+      "question": "동시 연구인 CsMI가 DINO와 공유하는 요소는?",
+      "answer": "momentum network와 multi-crop training을 결합한다는 점이다. CsMI 역시 convnet으로도 단순 k-NN 분류기에서 강한 성능을 보여, 이 두 요소가 좋은 k-NN 성능에 중요함을 뒷받침한다."
+    }
+  ]
+}
