@@ -251,29 +251,76 @@
     },
     {
       "id": "8c019295-6988-4f66-b118-85ad98c788b0",
-      "hint": null
+      "hint": "8c019295-6988-4f66-b118-85ad98c788b0/README.md"
     },
     {
       "id": "f20c4189-dc5f-4ed7-afd6-a00e5f4b0d34",
-      "hint": null,
-      "nano": null
+      "hint": "f20c4189-dc5f-4ed7-afd6-a00e5f4b0d34/README.md",
+      "nano": "f20c4189-dc5f-4ed7-afd6-a00e5f4b0d34/nano.jpg"
     },
     {
       "id": "088bd751-652d-4ad0-ad76-4ab2278beecc",
-      "hint": null
+      "hint": "088bd751-652d-4ad0-ad76-4ab2278beecc/README.md"
     },
     {
       "id": "b27203ba-89db-4059-91b9-efe3305d7072",
-      "hint": null
+      "hint": "b27203ba-89db-4059-91b9-efe3305d7072/README.md"
     },
     {
       "id": "c6dfba18-1e3a-4eff-a63d-60262c644dbc",
-      "hint": null,
-      "expy": null
+      "hint": "c6dfba18-1e3a-4eff-a63d-60262c644dbc/README.md",
+      "expy": "c6dfba18-1e3a-4eff-a63d-60262c644dbc/expy.py"
     },
     {
       "id": "dafb0e39-e289-4ac9-9b45-af088cd8f9dc",
-      "hint": null
+      "hint": "dafb0e39-e289-4ac9-9b45-af088cd8f9dc/README.md"
+    },
+    {
+      "id": "a44ad25e-7d6a-4a8b-8f95-a8586fa15412",
+      "hint": "a44ad25e-7d6a-4a8b-8f95-a8586fa15412/README.md"
+    },
+    {
+      "id": "9c945c38-8263-4248-bd59-e7c819f03a9e",
+      "hint": "9c945c38-8263-4248-bd59-e7c819f03a9e/README.md"
+    },
+    {
+      "id": "02616300-ca63-45c9-a1ec-fbdde0e1ba2d",
+      "hint": "02616300-ca63-45c9-a1ec-fbdde0e1ba2d/README.md",
+      "expy": "02616300-ca63-45c9-a1ec-fbdde0e1ba2d/expy.py"
+    },
+    {
+      "id": "2ffce2ba-af6a-40e2-b4c7-3d28bd0851c2",
+      "hint": "2ffce2ba-af6a-40e2-b4c7-3d28bd0851c2/README.md"
+    },
+    {
+      "id": "cccf79b1-9db2-4d8f-856e-8deebb5c26c2",
+      "hint": "cccf79b1-9db2-4d8f-856e-8deebb5c26c2/README.md"
+    },
+    {
+      "id": "1d60843d-10e6-4cbf-bc05-1aa423be5d45",
+      "hint": "1d60843d-10e6-4cbf-bc05-1aa423be5d45/README.md"
+    },
+    {
+      "id": "322915fa-ed0d-475c-b5a5-b5629feac197",
+      "hint": "322915fa-ed0d-475c-b5a5-b5629feac197/README.md",
+      "nano": "322915fa-ed0d-475c-b5a5-b5629feac197/nano.jpg"
+    },
+    {
+      "id": "72b65c7a-a784-4bf2-b482-65f132a4a865",
+      "hint": "72b65c7a-a784-4bf2-b482-65f132a4a865/README.md"
+    },
+    {
+      "id": "7c1936e0-0eaa-412d-83ee-35dc2a3c7806",
+      "hint": "7c1936e0-0eaa-412d-83ee-35dc2a3c7806/README.md"
+    },
+    {
+      "id": "c7200ab7-b74d-4038-bee3-6ebe8560b8bf",
+      "hint": "c7200ab7-b74d-4038-bee3-6ebe8560b8bf/README.md"
+    },
+    {
+      "id": "ef520047-1db1-4f29-af43-f9cc4f551211",
+      "hint": "ef520047-1db1-4f29-af43-f9cc4f551211/README.md",
+      "expy": "ef520047-1db1-4f29-af43-f9cc4f551211/expy.py"
     }
   ]
 }
