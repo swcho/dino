@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "aa3b2818-935e-423f-8979-e25db16a099d",
+      "question": "`MultiCropWrapper`에서 head는 몇 번 호출되는가?",
+      "answer": "backbone 출력을 모두 concat한 뒤 **한 번만** 호출된다. head에 BatchNorm을 쓰는 convnet 설정에서 모든 crop의 통계가 함께 잡히도록 하는 효과가 있다."
+    },
+    {
+      "id": "9c7236ce-eef3-4be0-97bd-5f829627d1a7",
+      "question": "`MultiCropWrapper.__init__`이 backbone에 하는 조작은?",
+      "answer": "`backbone.fc, backbone.head = nn.Identity(), nn.Identity()` 로 ImageNet 레이블 분류용 층을 비활성화한다. backbone이 특징만 내보내게 만드는 처리다."
+    },
+    {
+      "id": "e71efdab-8480-4f05-bea4-499128149376",
+      "question": "batch=4, global 2 + local 8일 때 student 출력 shape은?",
+      "answer": "$(40, K)$ 다. $(2+8) \\times 4 = 40$ 행이고 각 행이 $K$차원 로짓이다. teacher는 `images[:2]`만 통과시켜 $(8, K)$ 를 낸다."
+    },
+    {
+      "id": "69238dca-1f50-4df9-804c-489d0aaec1ac",
+      "question": "DINO의 학생 분포 $P_s$ 식은?",
+      "answer": "$$P_s^{(v)}(k) = \\frac{\\exp(z_s^{(v)}(k)/\\tau_s)}{\\sum_j \\exp(z_s^{(v)}(j)/\\tau_s)}$$ 이며 $\\tau_s = 0.1$로 고정이다."
+    },
+    {
+      "id": "bf9131ae-7e1a-496e-abd0-c41843b09906",
+      "question": "DINO의 교사 분포 $P_t$ 식은?",
+      "answer": "$$P_t^{(u)}(k) = \\frac{\\exp((z_t^{(u)}(k)-c_k)/\\tau_t)}{\\sum_j \\exp((z_t^{(u)}(j)-c_j)/\\tau_t)}$$ 로, center $c$를 뺀 뒤 더 낮은 온도 $\\tau_t$로 sharpening한다."
+    },
+    {
+      "id": "04997bb9-f510-4c48-b8e6-c6f3ca90d74a",
+      "question": "center $c$는 어떻게 갱신되는가?",
+      "answer": "$$c \\leftarrow m_c c + (1-m_c)\\frac{1}{B\\cdot W}\\sum_i z_t(i)$$ 형태의 배치 평균 EMA이며 $m_c = 0.9$다. $W$는 world_size로, 모든 GPU에 걸쳐 평균을 낸다."
+    },
+    {
+      "id": "41c581ef-d8c2-4273-b9b3-0cfa9dda65c3",
+      "question": "`update_center`에 `dist.all_reduce`가 들어 있는 이유는?",
+      "answer": "center를 전체 배치($B \\times W$) 평균으로 계산해야 하므로 모든 프로세스의 batch_center를 합산해야 한다. 그래서 프로세스 그룹 없이는 DINOLoss가 돌지 않는다."
+    },
+    {
+      "id": "a918c7af-ca6c-4417-a6a9-301a0d7d5d6c",
+      "question": "DINO의 최종 손실 식은?",
+      "answer": "$$\\mathcal{L} = \\frac{1}{|\\mathcal{N}|}\\sum_{u\\in\\{1,2\\}}\\sum_{v\\neq u}\\left(-\\sum_k P_t^{(u)}(k)\\log P_s^{(v)}(k)\\right)$$ 이며 $|\\mathcal{N}| = 2(2+N)-2$ 다."
+    },
+    {
+      "id": "ad3bbe7e-6aa0-4950-9c83-02159b87065c",
+      "question": "DINOLoss에서 gradient가 학생 쪽으로만 흐르게 하는 코드 요소는?",
+      "answer": "교사 분포에 걸린 `.detach()` 다. `teacher_out = F.softmax(...).detach().chunk(2)` 형태로 교사 경로를 계산 그래프에서 끊는다."
+    },
+    {
+      "id": "055f8348-ebb3-4bd3-b4eb-1a27938c4caa",
+      "question": "DINOLoss의 `student_temp`와 `teacher_temp` 기본값과 그 부등호가 중요한 이유는?",
+      "answer": "$\\tau_s = 0.1$(고정), $\\tau_t = 0.04$(→ `teacher_temp`)다. $\\tau_t < \\tau_s$ 여야 교사가 학생보다 확신에 찬 분포를 내고 학습 신호가 생긴다."
+    },
+    {
+      "id": "c49cc950-4968-4ec8-b74b-dff110442907",
+      "question": "`teacher_temp_schedule`은 어떻게 만들어지는가?",
+      "answer": "`np.linspace(warmup_teacher_temp, teacher_temp, warmup_teacher_temp_epochs)`와 `np.ones(nepochs - warmup_epochs) * teacher_temp`를 concat해 만든다. 초기 고온이 학습을 불안정하게 만들기 때문에 warmup을 둔다."
+    },
+    {
+      "id": "761077e7-6519-4f98-9428-a97b5d12886f",
+      "question": "교차엔트로피 $H(P_t, P_s)$는 어떻게 분해되는가?",
+      "answer": "$$H(P_t, P_s) = H(P_t) + D_{\\mathrm{KL}}(P_t \\Vert P_s)$$ 로, 교사 분포의 엔트로피 항과 두 view 정렬 항으로 나뉜다."
+    },
+    {
+      "id": "28e0db92-8e9c-4810-9dbf-f3f3a853fc15",
+      "question": "손실 분해 관점에서 붕괴가 왜 \"지름길\"인가?",
+      "answer": "$H(P_t, P_s) = H(P_t) + D_{KL}(P_t\\Vert P_s)$ 에서 정렬($D_{KL}$)을 배우지 않고 $H(P_t)$만 0으로 깎아도 손실이 내려간다. 그래서 loss 감소가 곧 학습 성공은 아니다."
+    },
+    {
+      "id": "06e792ad-88e4-427f-b91c-2fdf276adcf3",
+      "question": "DINO에서 uniform collapse의 증상과 막는 장치는?",
+      "answer": "$P_t \\to 1/K$, $H(P_t) \\to \\log K$ 로 모든 입력이 같은 flat 분포가 된다. sharpening($\\tau_t < \\tau_s$)이 이를 막는다."
+    },
+    {
+      "id": "e7726e8e-072a-496f-baef-8d05fb8c3f73",
+      "question": "DINO에서 단일 프로토타입 collapse의 증상과 막는 장치는?",
+      "answer": "$P_t$가 항상 같은 one-hot이 되고 $H(P_t) \\to 0$ 이 된다. centering($z_t - c$)이 이를 막는다."
+    },
+    {
+      "id": "59f9bd73-ec99-40bf-beea-a8a466d03569",
+      "question": "centering과 sharpening이 서로를 대체할 수 없는 이유는?",
+      "answer": "두 장치가 서로 반대 방향으로 밀기 때문이다. sharpening은 one-hot 쪽, centering은 uniform 쪽으로 밀며, 하나만 있으면 해당 방향으로 붕괴한다(논문 Fig. 5)."
+    },
+    {
+      "id": "4e196fe5-664a-4e9e-acd8-359beeb18776",
+      "question": "centering과 sharpening은 각각 무엇을 담당하는가?",
+      "answer": "centering은 \"어떤 프로토타입이 뽑히나\"의 균형을 담당하고, sharpening은 \"얼마나 확신하나\"를 담당한다. centering은 엔트로피 자체를 올리지 않는다."
+    },
+    {
+      "id": "5db2ea31-5835-4678-a7be-5dc15a8110eb",
+      "question": "`freeze_last_layer`는 무엇을 하고 왜 필요한가?",
+      "answer": "`epoch < freeze_last_layer`(기본 1 epoch)일 때 이름에 `last_layer`가 든 파라미터의 grad를 `None`으로 만든다. 프로토타입이 초기 노이즈로 흔들리는 것을 막는 세 번째 보조 장치다."
+    },
+    {
+      "id": "ed075bcd-3be4-44a2-8be5-82addf6c05a4",
+      "question": "노트북 §7 실험 A는 무엇을 보여주는가?",
+      "answer": "온도 $\\tau$만으로 교사 엔트로피가 $0$과 $\\log K$ 사이 어디든 갈 수 있음을 보여준다. $\\tau_t = 0.04 < \\tau_s = 0.1$ 이라는 부등호가 학습 신호를 만들고, 둘이 같으면 신호가 사라진다."
+    }
+  ]
+}

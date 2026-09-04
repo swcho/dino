@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "d3f7da30-b26d-450f-8682-bc4cf64a03d3",
+      "question": "노트북 §7 실험 B에서 centering의 효과는 어떻게 측정됐는가?",
+      "answer": "프로토타입 0에 bias 2.0을 준 상황에서 argmax가 0이 되는 비율을 관측했다. centering 없음은 0.819로 독식했고, centering 있음은 0.003으로 uniform 기대값 0.0020에 가까웠다."
+    },
+    {
+      "id": "c985c645-37cf-4394-a8f5-6120053470d9",
+      "question": "§7 실험에서 학습된 center가 주입한 bias를 흡수했는지 어떻게 확인했는가?",
+      "answer": "center의 0번째 성분이 2.011(주입한 bias 2.0)로 수렴하고 나머지 평균은 약 0이 됐다. 즉 center EMA가 구조적 편향만 정확히 흡수해 빼준다."
+    },
+    {
+      "id": "1cefff3d-817b-448b-95e0-8e593f2398b1",
+      "question": "`utils.cosine_scheduler`가 스케줄을 미리 배열로 만드는 방식의 장점은?",
+      "answer": "학습 전에 iteration 길이의 numpy 배열을 통째로 만들고 `schedule[it]`로 조회하므로 스케줄러에 상태가 없다. 따라서 checkpoint resume이 자동으로 정확하다."
+    },
+    {
+      "id": "96998f37-0ba8-4661-b789-5c97a4b17440",
+      "question": "`cosine_scheduler`의 수식은?",
+      "answer": "warmup 구간은 $v_t = \\frac{t}{T_w}v_{base}$ 로 선형이고, 이후는 $v_t = v_{final} + \\frac{1}{2}(v_{base}-v_{final})\\left(1+\\cos\\frac{\\pi(t-T_w)}{T-T_w}\\right)$ 다."
+    },
+    {
+      "id": "a4e932df-1be2-4bcd-b2ec-a0f187d826b1",
+      "question": "DINO 사전학습의 learning rate 스케줄은?",
+      "answer": "$0 \\to \\texttt{lr} \\to 10^{-6}$ 로, 기본 10 epoch 선형 warmup 후 cosine 감소한다. `min_lr` 기본값은 $10^{-6}$이다."
+    },
+    {
+      "id": "bba1be3a-8d38-4a4f-b429-5ef455cc1c0a",
+      "question": "DINO의 learning rate linear scaling rule은?",
+      "answer": "$$\\texttt{lr}_{eff} = 0.0005 \\times \\frac{\\texttt{batch\\_size\\_per\\_gpu} \\times \\texttt{world\\_size}}{256}$$ 로, batch 64/GPU × 8 GPU면 base lr이 0.001이 된다."
+    },
+    {
+      "id": "d37d878b-44e3-4189-bc7a-c5c6fd1f4691",
+      "question": "DINO의 weight decay 스케줄이 특이한 점은?",
+      "answer": "$0.04 \\to 0.4$ 로 학습이 진행될수록 **증가**한다. 일반적인 스케줄과 반대이며, 초기엔 자유롭게 탐색하고 후반에 강하게 정규화해 표현을 압축하려는 의도다."
+    },
+    {
+      "id": "04ea337a-3ea0-408c-96a7-ee162995e564",
+      "question": "teacher momentum $m$의 스케줄과 그 이유는?",
+      "answer": "$0.996 \\to 1.0$ 으로 cosine 증가한다. $m \\to 1$이면 교사가 사실상 얼어붙어 타겟이 고정되므로 후반 학습이 안정된다."
+    },
+    {
+      "id": "590c8331-b03b-4713-bf5f-c0868c3333f4",
+      "question": "weight decay는 어떤 파라미터에만 적용되는가?",
+      "answer": "`get_params_groups`가 만든 0번 param_group(regularized)에만 적용된다. bias와 1차원 파라미터(Norm 계열)는 1번 group으로 분리돼 `weight_decay=0`이다."
+    },
+    {
+      "id": "839601e3-05c0-4e63-aa2d-86ca2298490d",
+      "question": "`cosine_scheduler`의 assert에서 죽는 대표적 상황은?",
+      "answer": "`warmup_epochs`(기본 10)가 `epochs`보다 크면 `iters` 길이가 음수가 되어 `assert len(schedule) == epochs * niter_per_ep`에서 실패한다. 짧게 돌릴 땐 `--warmup_epochs 0`을 줘야 한다."
+    },
+    {
+      "id": "bbfca273-12ef-40f4-9db7-d5c631b766e7",
+      "question": "EMA teacher의 유효 평균 구간(effective window)은 어떻게 계산하는가?",
+      "answer": "$\\tau_{eff} = \\dfrac{1}{1-m}$ iteration이다. $m=0.996$이면 약 250 iteration, $m=0.9999$면 약 10000 iteration의 학생 궤적을 평균한 모델이 된다."
+    },
+    {
+      "id": "adc246e7-7035-4bda-adb3-7e4fe8662b22",
+      "question": "EMA teacher 갱신의 실제 코드는?",
+      "answer": "`param_k.data.mul_(m).add_((1 - m) * param_q.detach().data)` 로, `torch.no_grad()` 안에서 in-place로 수행된다."
+    },
+    {
+      "id": "d79e00c8-a5c2-4b39-b377-95e20d377a77",
+      "question": "학생을 1.0에 고정하고 EMA를 $1/(1-m)$ step 돌리면 교사 값은?",
+      "answer": "약 0.6329로, 이론값 $1 - 1/e = 0.6321$과 일치한다. 지수 이동평균의 시간상수가 $1/(1-m)$임을 수치로 확인해 주는 결과다."
+    },
+    {
+      "id": "eb08767b-5acd-479a-aae2-3506e93d5a84",
+      "question": "`train_one_epoch`에서 글로벌 iteration은 어떻게 계산하는가?",
+      "answer": "`it = len(data_loader) * epoch + it` 로 계산한다. 이 값으로 lr / wd / momentum 스케줄 배열을 인덱싱한다."
+    },
+    {
+      "id": "f7556e14-03bd-4124-a5bd-f9371bda50cc",
+      "question": "`train_one_epoch`에서 teacher forward에 `no_grad`를 쓰지 않는 이유는?",
+      "answer": "teacher 모듈의 모든 파라미터가 이미 `requires_grad = False`이기 때문이다. 별도로 `no_grad` 컨텍스트를 두지 않아도 gradient가 축적되지 않는다."
+    },
+    {
+      "id": "f8bd9d1c-0617-470d-8e5d-ac1185ef5368",
+      "question": "DINO 학습 루프의 NaN 가드는 어떻게 구현돼 있는가?",
+      "answer": "`math.isfinite(loss.item())`이 실패하면 메시지를 출력하고 `sys.exit(1)`로 학습을 즉시 종료한다. 조용히 발산하는 것을 막는 장치다."
+    },
+    {
+      "id": "ab51f801-3bf0-4b39-808d-94db1ae1a964",
+      "question": "`utils.clip_gradients`는 `torch.nn.utils.clip_grad_norm_`과 어떻게 다른가?",
+      "answer": "전체 파라미터의 글로벌 노름이 아니라 **파라미터 텐서마다 개별로** 노름을 재고 클리핑한다. $g_p \\leftarrow g_p \\cdot \\min(1, \\texttt{clip}/(\\lVert g_p\\rVert_2 + \\varepsilon))$ 형태다."
+    },
+    {
+      "id": "3a19db62-528c-4f56-a80f-bae38458995d",
+      "question": "`clip_gradients`의 반환값은 무엇인가?",
+      "answer": "클리핑 **이전**의 파라미터별 grad 노름 리스트다. 로깅용으로 쓸 수 있으며 `clip_grad` 기본값은 3.0이다."
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "f7b0ef12-6bf2-432b-b96e-84d30d335283",
+      "question": "DINO의 k-NN 분류 예측 식은?",
+      "answer": "$$\\hat{y}(x) = \\arg\\max_c \\sum_{i\\in\\mathcal{N}_k(x)} \\mathbb{1}[y_i = c]\\cdot\\exp\\!\\left(\\frac{\\cos(z_x, z_i)}{T}\\right)$$ 이며 온도 $T = 0.07$이다."
+    },
+    {
+      "id": "a63a91a6-c65e-4080-865a-954de4446964",
+      "question": "k-NN 평가에서 내적이 코사인 유사도와 같아지는 이유는?",
+      "answer": "특징을 `nn.functional.normalize`로 L2 정규화한 뒤 내적을 쓰기 때문이다. 이 단계에서 DINOHead는 사용되지 않는다(버려지는 부분)."
+    },
+    {
+      "id": "78e3b6ae-142a-4b85-a596-6608397500c9",
+      "question": "`eval_knn.py`의 knn_classifier가 val 이미지 100장 미만에서 죽는 이유는?",
+      "answer": "`imgs_per_chunk = num_test_images // 100`이 0이 되어 `range()`의 step이 0이 되기 때문이다. `ValueError: range() arg 3 must not be zero`로 실패한다."
+    },
+    {
+      "id": "3a2ada1d-5568-4161-8940-048d4b4638d1",
+      "question": "k-NN 평가의 val transform은 어떻게 구성되는가?",
+      "answer": "`Resize(256, BICUBIC)` → `CenterCrop(224)` → `ToTensor` → `Normalize(ImageNet 통계)` 순서다. train 쪽도 추출만 하므로 같은 transform을 쓴다."
+    },
+    {
+      "id": "a2618254-9899-42df-aaeb-fd9cc3664709",
+      "question": "노트북 §12의 k-NN 결과(랜덤 초기화 24%, 미니 학습 24%)를 어떻게 해석해야 하는가?",
+      "answer": "수십~수백 step 학습한 ViT-Tiny는 랜덤 초기화와 구분되지 않으므로 이 숫자는 의미가 없다. 의미 있는 비교 대상은 공식 사전학습 가중치로, CIFAR-10 부분집합에서 ViT-S/16이 20-NN top1 87.0%를 낸다."
+    },
+    {
+      "id": "1fcac607-93f2-48af-84c6-edeb79c46da4",
+      "question": "마지막 블록 어텐션에서 CLS 히트맵을 만드는 절차는?",
+      "answer": "$A^{(h)} = \\mathrm{softmax}(q^{(h)}k^{(h)\\top}/\\sqrt{d_h})$ 에서 $a^{(h)} = A^{(h)}[0, 1:]$ 를 꺼내 $\\sqrt{P}\\times\\sqrt{P}$ 로 reshape하고 patch_size 배 업샘플한다."
+    },
+    {
+      "id": "8d46c2e8-f22b-40e4-94ce-f399972c881e",
+      "question": "DINO ViT의 어텐션이 객체 경계를 따라가는 이유에 대한 직관은?",
+      "answer": "local crop(면적 5~40%)이 global crop을 예측해야 하므로, 부분에서 전체를 식별할 수 있는 단서인 객체의 판별적 영역에 주의를 몰아야 한다. 배경은 crop마다 달라져 도움이 안 되지만 객체는 crop 간에 일관된다."
+    },
+    {
+      "id": "fa60e133-166a-49ca-ad4c-d1d1641029f7",
+      "question": "DINO의 `Attention.forward`가 `return x, attn`으로 어텐션 맵을 항상 반환하는 대가는?",
+      "answer": "`F.scaled_dot_product_attention`(FlashAttention)을 쓸 수 없어 $(B, \\text{heads}, N, N)$ 행렬이 항상 메모리에 올라간다. patch 8 + 큰 이미지에서 OOM의 주범이다."
+    },
+    {
+      "id": "8726455c-80f1-4bb1-96bd-e4943024f3a1",
+      "question": "ViT의 `patch_size`를 16에서 8로 바꾸면 무엇이 달라지는가?",
+      "answer": "파라미터 수는 동일하지만 토큰 수가 4배가 되어 어텐션 연산량이 약 16배로 늘어난다. 224px 기준 patch16은 196토큰, patch8은 784토큰이다."
+    },
+    {
+      "id": "96008b27-f735-4a80-8495-9eb77b07c4ff",
+      "question": "DINO 학습 파이프라인 전체를 한 줄로 요약하면?",
+      "answer": "ImageFolder(레이블 폐기) → DataAugmentationDINO로 비대칭 multi-crop → teacher(global 2개, centering+sharpening+detach) / student(전부) → 18개 교차엔트로피 항 평균 → clip(per-tensor)+AdamW → EMA teacher 갱신."
+    },
+    {
+      "id": "e46daab9-7a1f-4214-8577-77c098f65b9a",
+      "question": "DINO의 `momentum_teacher`를 너무 작게 주면 어떤 문제가 생기는가?",
+      "answer": "교사가 학생을 너무 빨리 따라가 타겟이 요동치고, 결국 붕괴로 이어진다. 기본값 0.996에서 1.0까지 증가시켜 타겟 안정성을 확보한다."
+    },
+    {
+      "id": "69a15380-8fc4-4d6b-be17-c150dc4d7cf7",
+      "question": "`local_crops_number`를 0으로 주면 어떻게 되는가?",
+      "answer": "multi-crop이 무효화되어 local-to-global 손실 항이 사라진다. 손실 항 개수도 $2 \\times 2 - 2 = 2$개로 줄어들어 DINO의 핵심 학습 신호가 약해진다."
+    },
+    {
+      "id": "f666e02e-f8e0-4a8d-bc2e-684fc2f2450c",
+      "question": "DINO 사전학습 체크포인트에는 무엇이 저장되는가?",
+      "answer": "`student`, `teacher`, `optimizer`, `epoch`, `args`, `dino_loss` state와 (AMP 사용 시) `fp16_scaler`가 저장된다. ViT-S 기준 약 440MB이며 `checkpoint.pth` 존재 시 자동 resume된다."
+    },
+    {
+      "id": "b9b9db23-b0bc-4a9a-9851-5e59961baed3",
+      "question": "`eval_linear.py`에서 주의할 저장 관련 함정은?",
+      "answer": "`output_dir`을 만들지 않고 바로 `log.txt`를 열어서 미리 `mkdir -p`가 필요하다. 또 저장되는 체크포인트는 best가 아니라 last epoch 모델이므로 보고된 best 수치와 다른 모델일 수 있다."
+    },
+    {
+      "id": "704fd1c1-cbc7-4292-b704-49baa8764913",
+      "question": "DINO 스모크 테스트 명령에서 `--warmup_epochs 0`이 필수인 이유는?",
+      "answer": "기본 `warmup_epochs=10`이 `--epochs 2`보다 커서 `utils.cosine_scheduler`의 assert에서 죽기 때문이다. 짧게 파이프라인만 확인할 때 반드시 0으로 줘야 한다."
+    },
+    {
+      "id": "7248f0db-fa17-4b02-b6e8-baca1a1649b3",
+      "question": "ImageNet에서 DINO ViT-S를 8 GPU 한 노드로 학습하는 명령은?",
+      "answer": "`python -m torch.distributed.launch --nproc_per_node=8 main_dino.py --arch vit_small --data_path /path/to/imagenet/train --output_dir /path/to/save` 형태다."
+    },
+    {
+      "id": "50a72b13-20ab-4511-abb4-571f80510871",
+      "question": "DINO의 `out_dim`을 너무 작게 또는 너무 크게 주면 각각 어떤 문제가 있는가?",
+      "answer": "작으면 프로토타입 수가 부족해 표현력이 떨어지고, 크면 head가 backbone보다 커져 VRAM과 파라미터 부담이 커진다. 기본값 65536은 ViT-S에서 head 22.4M을 만든다."
+    },
+    {
+      "id": "026c1c0a-bdf0-4e8a-8b5e-cfc1d4ff35a9",
+      "question": "`center_momentum`을 너무 크게 주면 어떤 문제가 생기는가?",
+      "answer": "center EMA가 배치 평균 변화를 너무 느리게 추적해 구조적 편향을 제때 흡수하지 못한다. 기본값은 0.9다."
+    }
+  ]
+}

@@ -91,8 +91,8 @@ ImageNet 전체 학습은 8 GPU로 1.75일 걸립니다. 아래는 **파이프�
 ```bash
 python main_dino.py \
     --arch vit_tiny --patch_size 16 \
-    --data_path /tmp/dino_tiny/train \
-    --output_dir /tmp/dino_train \
+    --data_path out/dino_tiny/train \
+    --output_dir out/dino_train \
     --epochs 2 --warmup_epochs 0 \
     --batch_size_per_gpu 8 --num_workers 2 \
     --local_crops_number 4 --saveckp_freq 1
@@ -119,7 +119,7 @@ Slurm 다중 노드는 `python run_with_submitit.py --nodes 2 --ngpus 8 ...` (su
 ```bash
 python eval_knn.py \
     --arch vit_small --patch_size 16 \
-    --data_path /tmp/dino_tiny \
+    --data_path out/dino_tiny \
     --batch_size_per_gpu 32 --num_workers 4 \
     --nb_knn 10 20 --use_cuda True
 ```
