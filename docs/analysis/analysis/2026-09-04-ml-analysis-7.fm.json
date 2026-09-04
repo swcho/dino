@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "1feede01-a884-4e30-b165-b36ab887861f",
+      "question": "DINO 프로젝트를 이해하기 위한 권장 읽기 순서 첫 세 개는?",
+      "answer": "① README의 모델 표(목표 수치 파악), ② `vision_transformer.py`(PatchEmbed→Attention→Block→forward→DINOHead), ③ `main_dino.py`의 `DINOLoss`(논문 아이디어가 응축된 부분)다."
+    },
+    {
+      "id": "cffdb3d5-070d-4bd6-b8c5-439fa206d7ef",
+      "question": "'pretext task'란 무엇인가?",
+      "answer": "레이블 없이 스스로 만들어낸 학습 과제를 뜻한다. DINO에서는 'teacher가 만든 분포를 student가 맞추기'가 pretext task다."
+    },
+    {
+      "id": "0b549a0b-3cc8-4558-8874-0701424f5ab9",
+      "question": "'self-distillation'이 일반 distillation과 다른 점은?",
+      "answer": "teacher와 student가 같은 구조이며 외부의 이미 학습된 교사 모델이 없다는 점이다. teacher는 student 자신의 EMA로 만들어진다."
+    },
+    {
+      "id": "1aaf3617-121d-4ff1-953c-17b6c4dbe070",
+      "question": "'collapse(붕괴)'란 무엇이며 왜 SSL의 최대 실패 모드인가?",
+      "answer": "모든 입력에 대해 같은 출력을 내는 자명해로 수렴하는 현상이다. 레이블이 없어 이 해가 손실을 완벽히 낮추므로 별도 방지 장치 없이는 쉽게 빠진다."
+    },
+    {
+      "id": "02ba2e69-ef28-4fa8-bd79-db15920c31b1",
+      "question": "'local-to-global correspondence'란 무엇인가?",
+      "answer": "student가 local crop을, teacher가 global crop을 볼 때 둘의 출력을 맞추게 하는 학습 신호다. '이미지 일부만 봐도 전체와 같은 표현이 나와야 한다'는 제약을 만든다."
+    },
+    {
+      "id": "2a67b7f9-614a-49cb-995b-b331d2e85a25",
+      "question": "'linear probe'와 'k-NN eval'의 차이는?",
+      "answer": "linear probe는 동결 특징 위에 선형층 하나를 학습하지만, k-NN eval은 학습 파라미터가 0개로 특징의 코사인 유사도 가중 투표만 쓴다. 둘 다 표현 품질의 표준 척도다."
+    },
+    {
+      "id": "5655bfc5-ab2b-41a6-ae90-9a9b93764859",
+      "question": "`--n_last_blocks`와 `--avgpool_patchtokens`는 각각 무엇을 하는가?",
+      "answer": "`n_last_blocks`는 마지막 몇 개 블록의 CLS 토큰을 concat할지 정한다(ViT-S=4, ViT-B=1). `avgpool_patchtokens`는 마지막 블록의 패치 토큰 평균을 특징에 추가로 concat한다."
+    },
+    {
+      "id": "cff1a573-7f57-4713-af90-27bf6d231a76",
+      "question": "DAVIS 평가의 'label propagation'은 어떤 방식인가?",
+      "answer": "학습 없이 첫 프레임 마스크를 특징 유사도(affinity)로 다음 프레임에 전파하는 방식이다. `exp(feat_tar @ feat_src / 0.1)`로 affinity를 구하고 top-k만 남겨 정규화한다."
+    },
+    {
+      "id": "1ef53ef1-8577-454e-a525-8ce3b130f9b2",
+      "question": "linear probe에서 차원 불일치가 났을 때 확인할 계산식은?",
+      "answer": "`embed_dim * (n_last_blocks + int(avgpool_patchtokens))`이다. 백본을 바꿨다면 `--n_last_blocks`도 함께 맞춰야 한다."
+    },
+    {
+      "id": "b432ca77-5f8b-4fe2-b076-18c8c6bd019c",
+      "question": "`interpolate_pos_encoding`의 assert가 실패할 때 확인할 점은?",
+      "answer": "입력 H·W가 `patch_size`의 배수인지 확인해야 한다. `visualize_attention.py`는 이를 위해 입력을 명시적으로 잘라낸다."
+    },
+    {
+      "id": "1f728c7a-cc09-437b-9e9d-5be753a41be1",
+      "question": "DINO 학습에서 OOM이 날 때 조정 순서는?",
+      "answer": "`--batch_size_per_gpu` 낮추기 → `--local_crops_number` 낮추기 → `--patch_size 16` 사용 → `vit_tiny`로 교체 순이다. `--use_fp16 True`인지도 확인한다."
+    },
+    {
+      "id": "7fcb707e-e9e5-43ad-a0c8-03be299c0e5f",
+      "question": "loss는 낮은데 k-NN 정확도가 나쁘다면 무엇을 의심해야 하는가?",
+      "answer": "전형적인 표현 붕괴 신호다. loss만으로는 판별할 수 없으므로 `eval_knn.py`를 별도로 돌려 확인해야 한다."
+    },
+    {
+      "id": "25a5a25d-7d0c-4875-a876-1691a41885a5",
+      "question": "`Loss is nan, stopping training`이 뜰 때의 대응은?",
+      "answer": "`--teacher_temp`를 0.04로 낮추고, `--freeze_last_layer`를 올리며, `--clip_grad` 설정을 확인한다. fp16이면 `--use_fp16 False`도 시도해 볼 수 있다."
+    },
+    {
+      "id": "27776fc9-0dc4-4ccf-8fc9-892510ef02b2",
+      "question": "DINO 실행 중 로그가 전혀 안 나올 때의 원인은?",
+      "answer": "`setup_for_distributed`가 rank 0 외 프로세스의 `print`를 막기 때문이다. `print(..., force=True)`로 우회할 수 있다."
+    },
+    {
+      "id": "6877deea-523a-445d-8942-f7441b924d71",
+      "question": "DINO에서 사전학습 가중치를 새로 추가하려면 몇 곳을 고쳐야 하는가?",
+      "answer": "네 곳 모두 고쳐야 한다. `utils.load_pretrained_weights`, `hubconf.py`, `visualize_attention.py`, `video_generation.py`에 URL 매핑이 중복돼 있기 때문이다."
+    },
+    {
+      "id": "3e9a465b-9855-4053-ba68-df7b79379621",
+      "question": "DINO에서 백본을 교체하려면 어디를 수정해야 하는가?",
+      "answer": "`vision_transformer.py`에 팩토리 함수를 추가하고 `main_dino.py`의 문자열 dispatch 분기를 수정한다. `embed_dim` 추출 경로도 함께 맞춰야 한다."
+    },
+    {
+      "id": "122c3fb5-71ec-4a67-a859-6e0466f4423e",
+      "question": "DINO에서 데이터셋을 교체할 때 코드 수정이 필요 없는 조건은?",
+      "answer": "데이터를 `ImageFolder` 구조(`root/class/*.jpg`)로 맞추면 코드 수정이 전혀 필요 없다. 구조가 다르면 `main_dino.py`의 dataset 생성 부분을 고쳐야 한다."
+    },
+    {
+      "id": "44cd57fc-6919-44ed-88d0-df6de4aa6921",
+      "question": "이 분석 문서의 파라미터 수와 shape 값은 어떻게 얻어진 것인가?",
+      "answer": "실제 모델을 인스턴스화해 `sum(p.numel())`로 세고, `(2,3,224,224)`를 통과시켜 8개 지점의 shape을 측정한 실측값이다. 추정치가 아니다."
+    }
+  ]
+}

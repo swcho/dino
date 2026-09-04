@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "362a6a9a-8cc6-4543-be36-1e28e199841d",
+      "question": "`eval_image_retrieval.py`와 `eval_copy_detection.py`의 공통점은?",
+      "answer": "둘 다 `eval_knn.extract_features`를 라이브러리처럼 import해 재사용한다. 평가 스크립트가 다른 평가 스크립트에 의존하는 어색한 구조다."
+    },
+    {
+      "id": "fe6dd785-acab-44df-b4e1-0d91ae285be1",
+      "question": "복제 탐지(`eval_copy_detection.py`)의 흐름은?",
+      "answer": "`CopydaysDataset`이 strong/jpeg/crop 등 변형 블록을 관리하고, YFCC100M 이미지로 학습한 `utils.PCA` whitening을 적용한 뒤 AP를 계산한다."
+    },
+    {
+      "id": "f5bdb266-980d-4d87-8d6e-de37df979b7e",
+      "question": "`run_with_submitit.py`의 `Trainer` 클래스는 무엇을 하는가?",
+      "answer": "`__call__`에서 `main_dino.train_dino`를 호출하고, `checkpoint()`에서 `submitit.helpers.DelayedSubmission`으로 preemption 시 자동 재제출한다. 노드 간 rendezvous는 `file://` dist_url로 맞춘다."
+    },
+    {
+      "id": "52e2d404-a56c-4c3c-ab6a-267605d4e104",
+      "question": "DINO 프로젝트의 사실상 데이터 계약 4가지는?",
+      "answer": "입력 데이터셋(ImageFolder 구조), crop 배치(해상도 내림차순 정렬된 `List[Tensor]`), 체크포인트 딕셔너리, 배포 가중치(backbone-only 또는 full ckpt)다. dataclass 같은 명시적 모델은 거의 없다."
+    },
+    {
+      "id": "d3cf3897-3be4-4590-ab4d-34acdfcfff6f",
+      "question": "DINO 모듈 의존 그래프에 순환 의존이 있는가?",
+      "answer": "없다. `진입점 → {vision_transformer, eval_knn} → utils`로 흐르는 깨끗한 DAG이며, `utils.py`는 내부 모듈을 하나도 import하지 않는 리프 노드다."
+    },
+    {
+      "id": "9427340b-c8fe-443e-b140-def9643ecd48",
+      "question": "`vision_transformer.py`는 `utils.py`에서 무엇을 가져다 쓰는가?",
+      "answer": "`trunc_normal_` 하나만 쓴다. ViT 파라미터 초기화에 쓰이는 truncated normal 함수다."
+    },
+    {
+      "id": "ad54203f-7d35-4912-8b6d-faeb34c1756c",
+      "question": "`extract_features`의 위치에 대한 구조적 지적은 무엇인가?",
+      "answer": "평가 스크립트인 `eval_knn.py`에 있어서 다른 평가 스크립트가 이를 import해야 한다. `utils.py`로 올리는 편이 의존 방향상 자연스럽다."
+    },
+    {
+      "id": "a928f256-4c12-4fc4-ad81-7dca983877e4",
+      "question": "DINO 코드베이스의 전역 상태는 주로 어디에 있는가?",
+      "answer": "대부분 프레임워크 수준에 있다. `torch.distributed` 프로세스 그룹, 분산 환경변수, `builtins.print` 재정의, `cudnn.benchmark` 설정 등이다."
+    },
+    {
+      "id": "23707f2b-7b53-4090-8da4-5a36a0dfdb1c",
+      "question": "`utils.setup_for_distributed`는 무엇을 하는가?",
+      "answer": "`builtins.print`를 재정의해 rank 0 프로세스에서만 출력되게 만든다. 다른 rank에서 출력하려면 `print(..., force=True)`를 써야 한다."
+    },
+    {
+      "id": "f5cea0c6-fda1-4f8b-8bfe-39a84d15ee85",
+      "question": "`DINOLoss.center`는 어떻게 관리되는 상태인가?",
+      "answer": "`register_buffer`로 등록된 버퍼이며 학습 전체에 걸쳐 EMA(momentum 0.9)로 갱신된다. 체크포인트에 `dino_loss` 키로 함께 저장된다."
+    },
+    {
+      "id": "3d8d0f28-2c8e-4425-b647-fd063262d20a",
+      "question": "`eval_linear.py`의 유일한 구조적 결함으로 지적된 것은?",
+      "answer": "모듈 최상위 변수 `args`를 `train()`과 `validate_network()`가 인자로 받지 않고 전역으로 참조하는 점이다. `main_dino.py`는 같은 실수를 하지 않고 `args`를 넘긴다."
+    },
+    {
+      "id": "b540982d-fae7-46bf-a273-f02bed8173ed",
+      "question": "DINO의 데이터 흐름은 어떤 형태인가?",
+      "answer": "이벤트나 콜백이 없는 단방향 파이프라인이다. 이미지 → 증강 → MultiCropWrapper → 백본 → DINOHead → DINOLoss → student 역전파, 그리고 EMA로 teacher 갱신 순이다."
+    },
+    {
+      "id": "72c9e4c6-a7ed-43a3-aebc-34e790126097",
+      "question": "DINO 파이프라인의 5가지 주요 데이터 변환 지점은?",
+      "answer": "crop 분해, 해상도 그룹핑, L2 정규화, 분산 재조립(`all_gather`+`index_copy_`), 위치 임베딩 보간이다."
+    },
+    {
+      "id": "851ed1a6-6384-439d-925b-38763b4305dd",
+      "question": "DINO는 어떤 외부 시스템과 연동하는가?",
+      "answer": "네트워크 읽기(사전학습 가중치, torch.hub XCiT, 예시 이미지), 파일 I/O(ImageFolder, checkpoint, log.txt), Slurm 스케줄러다. DB나 API 연동은 전혀 없다."
+    },
+    {
+      "id": "97f60e0e-bbbf-43b2-9f8e-295f67971cd5",
+      "question": "DINO의 로깅 방식과 그 장단점은?",
+      "answer": "W&B나 TensorBoard 없이 `log.txt`에 JSON Lines로 append한다. 외부 의존성이 없다는 장점과, 시각화를 직접 만들어야 한다는 단점이 함께 있다."
+    },
+    {
+      "id": "70c763c7-51a6-40f7-909e-daf31ff37291",
+      "question": "`MASTER_ADDR`와 `MASTER_PORT`는 단일 GPU 실행 시 누가 설정하는가?",
+      "answer": "`utils.init_distributed_mode`가 `127.0.0.1:29500`으로 자동 설정한다. 덕분에 런처 없이도 프로세스 그룹 초기화가 가능하다."
+    },
+    {
+      "id": "735a94ff-bdc6-4819-9366-ff0a035bc445",
+      "question": "`TORCH_HOME` 환경변수의 역할은?",
+      "answer": "PyTorch Hub 가중치 캐시 위치를 지정한다. 선택 사항이며 기본값은 `~/.cache/torch/hub/checkpoints/`다."
+    },
+    {
+      "id": "5912f4df-f146-4885-a540-0a231dcd0523",
+      "question": "DINO에 빌드 단계가 없다는 것의 장단점은?",
+      "answer": "컴파일·설치·러너 없이 인터프리터로 바로 실행할 수 있는 것이 장점이다. 반면 의존성 매니페스트가 없어 재현 가능한 환경을 코드만 보고 만들 수 없는 것이 단점이다."
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "e86eee49-3eef-4a6b-a399-238459e51704",
+      "question": "`load_pretrained_weights`가 `strict=False`인 것이 왜 위험한가?",
+      "answer": "키가 맞지 않아도 예외 없이 조용히 실패하기 때문이다. 로드 후 성능이 0이면 출력되는 `msg`의 `missing_keys`를 반드시 확인해야 한다."
+    },
+    {
+      "id": "71f43320-f276-40fe-b5bb-7410482e8c14",
+      "question": "DINO 사전학습이 `ImageFolder`를 쓰면서도 레이블이 필요 없는 이유는?",
+      "answer": "`train_one_epoch`이 `for it, (images, _) in ...`으로 레이블을 버리기 때문이다. 따라서 클래스 디렉토리가 1개뿐이어도 학습이 정상 동작한다."
+    },
+    {
+      "id": "9f6b0ed3-9db0-43ac-b0d4-4b8289387ed4",
+      "question": "DINO의 multi-crop 증강은 어떤 crop들로 구성되는가?",
+      "answer": "224px global crop 2장(scale 0.4~1.0)과 96px local crop 8장(scale 0.05~0.4)으로 총 10장이다. `--local_crops_number`로 local 개수를 조절한다."
+    },
+    {
+      "id": "d5b87baa-4ba0-43ab-8a2f-6873b1cdc97d",
+      "question": "두 global crop의 증강이 서로 다른 부분은 무엇인가?",
+      "answer": "global 1은 GaussianBlur(p=1.0)만 적용하고, global 2는 GaussianBlur(p=0.1)에 Solarization(p=0.2)을 추가한다. 나머지 flip·ColorJitter·Grayscale은 동일하다."
+    },
+    {
+      "id": "69398608-f00f-478e-b88b-dc2e8d542d40",
+      "question": "DINO의 증강 비대칭성은 어떤 역할을 하며 어디서 유래했는가?",
+      "answer": "두 view가 동일 통계를 갖지 않게 해 표현 붕괴를 추가로 억제한다. BYOL의 비대칭 증강 설계를 그대로 따른 것이다."
+    },
+    {
+      "id": "481a91e8-a1a2-4f7d-9462-48a92b907678",
+      "question": "local crop의 scale 상한과 global crop의 scale 하한이 맞닿아 있는 이유는?",
+      "answer": "local은 0.05~0.4, global은 0.4~1.0으로 경계가 0.4에서 만난다. 이로써 local crop이 항상 global보다 작은 영역을 보도록 보장된다."
+    },
+    {
+      "id": "23166c5e-7bc0-4c2e-9360-20d6a2923cfd",
+      "question": "DINO에서 사용하는 이미지 정규화 통계값은?",
+      "answer": "ImageNet 통계인 `mean=(0.485, 0.456, 0.406)`, `std=(0.229, 0.224, 0.225)`를 전 과제 공통으로 쓴다."
+    },
+    {
+      "id": "1cb998a6-cc38-4723-aa08-dc439e64d8e1",
+      "question": "`eval_video_segmentation.py`의 `color_normalize`에서 발견된 불일치는?",
+      "answer": "std의 첫 값이 다른 스크립트의 0.229가 아니라 0.228로 되어 있다. 원 저장소부터 있던 오타로 보이며 영향은 미미하지만 일관성이 깨진 부분이다."
+    },
+    {
+      "id": "8492a18f-13ef-45bc-ae27-ea3616bb059f",
+      "question": "`eval_linear.py`의 train과 val transform은 어떻게 다른가?",
+      "answer": "train은 `RandomResizedCrop(224) → HFlip → norm`이고, val은 `Resize(256) → CenterCrop(224) → norm`이다. k-NN은 val transform만 쓴다."
+    },
+    {
+      "id": "e9febc82-f140-4bcf-919f-26daf4177202",
+      "question": "DINO는 커스텀 `collate_fn`을 쓰는가?",
+      "answer": "쓰지 않는다. PyTorch 기본 `default_collate`가 처리하며, 증강이 `List[Tensor]`를 반환하므로 리스트의 각 위치별로 배치가 만들어진다."
+    },
+    {
+      "id": "dc9b960f-65c4-4fe5-84f9-9908adb9b2e7",
+      "question": "DINO의 한 배치는 어떤 자료구조인가?",
+      "answer": "텐서 하나가 아니라 길이 `2 + local_crops_number`인 `List[Tensor]`다. `[(B,3,224,224) x2, (B,3,96,96) x8]` 형태이며 패딩이나 마스킹은 없다."
+    },
+    {
+      "id": "88b305f6-3380-476a-a781-1f8a1b441d63",
+      "question": "`MultiCropWrapper`가 백본 forward 횟수를 줄이는 원리는?",
+      "answer": "`torch.unique_consecutive(..., return_counts=True)`로 연속된 동일 해상도 구간의 경계를 구해 그 구간만 `torch.cat` 후 한 번에 forward한다. crop 10장이어도 해상도가 2종이면 forward는 2회뿐이다."
+    },
+    {
+      "id": "736d1819-a851-4beb-90c7-fe389b5963b9",
+      "question": "crop 10장(global 2 + local 8)을 `MultiCropWrapper`에 넣으면 실측 forward 횟수와 출력 shape은?",
+      "answer": "경계 cumsum이 `[2, 10]`이 되어 forward는 2회다. batch=8일 때 출력은 `(80, 65536)`으로 `(2+8) x 8` 행이다."
+    },
+    {
+      "id": "46e045c2-9988-4ce1-bd24-67f1663c132c",
+      "question": "`MultiCropWrapper`가 암묵적으로 전제하는 계약은 무엇인가?",
+      "answer": "crop 리스트가 해상도별로 연속 정렬돼 있어야 한다는 것이다. 코드 어디에도 문서화돼 있지 않아, 증강 순서를 바꾸면 조용히 forward 횟수가 늘어난다."
+    },
+    {
+      "id": "96e815e7-9c76-4bb5-9848-e1762803cf52",
+      "question": "DINO 사전학습의 타겟(레이블)은 무엇인가?",
+      "answer": "명시적 레이블이 없고, teacher의 softmax 분포 `(B, 65536)`가 소프트 타겟 역할을 한다. student는 이 분포를 cross-entropy로 따라간다."
+    },
+    {
+      "id": "1575188b-fc86-44ea-9304-40f65690ba28",
+      "question": "DINO 사전학습의 기본 옵티마이저와 선택지는?",
+      "answer": "기본은 `AdamW`이며 `--optimizer`로 `sgd`, `lars`를 고를 수 있다. ViT에는 adamw, convnet 대배치에는 lars가 권장된다."
+    },
+    {
+      "id": "4f771b33-2440-45c4-9d47-cd4d3be694ae",
+      "question": "DINO의 linear scaling rule은 어떻게 적용되는가?",
+      "answer": "실제 LR = `args.lr * (batch_size_per_gpu * world_size) / 256`으로 계산된다. GPU 수나 배치를 바꿔도 유효 학습률이 유지되며, 사전학습과 linear probe 양쪽에 일관되게 적용된다."
+    },
+    {
+      "id": "ced7be45-d90a-46f7-a945-7d274c3e6a14",
+      "question": "DINO의 weight decay 스케줄이 일반적인 경우와 반대인 점은?",
+      "answer": "0.04에서 0.4로 cosine **증가**한다. 초기에는 자유롭게 탐색하고 후반에 강하게 정규화해 표현을 압축하려는 의도로 읽힌다."
+    },
+    {
+      "id": "da944efa-b699-4361-bfa0-755bf5c2b4fc",
+      "question": "`get_params_groups`는 어떤 파라미터를 weight decay에서 제외하는가?",
+      "answer": "이름이 `.bias`로 끝나거나 shape이 1차원인 파라미터(Norm 계열)를 제외한다. 이들은 별도 그룹으로 묶여 `weight_decay=0`이 적용된다."
+    }
+  ]
+}

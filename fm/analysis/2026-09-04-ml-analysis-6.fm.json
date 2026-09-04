@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "f193ea2e-b9ea-46e2-b461-56304837d8cf",
+      "question": "`random` 모듈이 시드되지 않는데도 DINO 증강이 대체로 재현되는 이유는?",
+      "answer": "PyTorch DataLoader가 각 워커의 `random`을 torch base_seed에서 파생시켜 재시드하기 때문이다. 실측 결과 `num_workers=2`에서는 동일 시드 2회 실행이 정확히 일치했다."
+    },
+    {
+      "id": "a64ecd5f-5bc2-4fd0-9f2e-749150c861be",
+      "question": "`num_workers=0`으로 디버깅할 때 재현성에 어떤 문제가 생기는가?",
+      "answer": "워커 재시드가 일어나지 않아 증강 난수가 고정되지 않는다. 실측에서 동일 시드 2회 실행 결과가 서로 달랐으므로 디버깅 중 혼란의 원인이 될 수 있다."
+    },
+    {
+      "id": "2e220679-3982-43c8-8fb5-a22e8ddbe33f",
+      "question": "DINO에서 비트 단위 재현이 보장되지 않는 이유는?",
+      "answer": "5개 스크립트 모두 `cudnn.benchmark = True`를 설정하고 `cudnn.deterministic`은 어디에도 없기 때문이다. 알고리즘 선택이 실행마다 달라질 수 있다."
+    },
+    {
+      "id": "cd245d2a-1910-44f0-a06e-5dbd2899e32a",
+      "question": "DINO 사전학습을 단일 GPU에서 실행하는 명령은?",
+      "answer": "`python main_dino.py --arch vit_small --data_path ... --output_dir ...`이면 충분하다. `init_distributed_mode`의 단일 GPU 폴백 덕에 `torchrun`이 필요 없다."
+    },
+    {
+      "id": "a7a7a402-e4cf-43fc-8f7e-0dbfc29a3ea9",
+      "question": "torch 2.x에서 8 GPU 학습을 실행하는 권장 명령 형태는?",
+      "answer": "`torchrun --nproc_per_node=8 main_dino.py ...`다. 기존 `python -m torch.distributed.launch --nproc_per_node=8`도 동작하지만 deprecated 경고가 나온다."
+    },
+    {
+      "id": "7eb1ca7e-76f3-4032-9598-5b786517b2fe",
+      "question": "데이터셋 없이 DINO가 동작하는지 가장 빠르게 확인하는 방법은?",
+      "answer": "`python visualize_attention.py --arch vit_small --patch_size 8 --output_dir ./attn`을 실행하면 된다. 가중치와 예시 이미지를 자동 다운로드하며 CPU에서도 동작한다."
+    },
+    {
+      "id": "0d5fbeb7-91a2-42b0-985d-2a84d1e5b9f0",
+      "question": "DINO 코드에서 배울 만한 스케줄러 설계 패턴은?",
+      "answer": "lr/wd/momentum을 iteration 길이의 numpy 배열로 미리 생성하는 것이다. 스케줄러에 상태가 없어 resume 시 상태 복원 버그가 구조적으로 제거된다."
+    },
+    {
+      "id": "557adf86-e005-4038-97fb-943f9e152d02",
+      "question": "`MultiCropWrapper`의 추상화 위치가 좋은 설계인 이유는?",
+      "answer": "multi-crop이라는 DINO 고유 요구를 모델도 학습 루프도 아닌 얇은 래퍼에 격리했기 때문이다. 덕분에 `train_one_epoch`은 `student(images)` 한 줄로 끝나고 ViT·ResNet·XCiT가 동일 코드로 학습된다."
+    },
+    {
+      "id": "a9f1e39f-59ba-45a0-b224-1b2f34bae410",
+      "question": "`interpolate_pos_encoding` 덕분에 얻는 실질적 이점은?",
+      "answer": "체크포인트 하나가 224px 학습, 96px local crop, 480px 시각화, 임의 DAVIS 해상도에 모두 재사용된다. 해상도별로 모델을 따로 둘 필요가 없다."
+    },
+    {
+      "id": "0d12f2d6-58a9-45a7-aac4-0b015b4fd591",
+      "question": "`train_one_epoch`에서 계산되지만 버려지는 유용한 지표는?",
+      "answer": "`param_norms = utils.clip_gradients(...)`가 반환하는 gradient norm이다. 받아만 놓고 쓰지 않는데, `log.txt`에 남기면 학습 안정성 진단 지표가 된다."
+    },
+    {
+      "id": "54c9c3b5-b056-42af-8e45-38f9a36d7f76",
+      "question": "DINO 사전학습에 추가하면 가장 가치가 큰 모니터링은 무엇인가?",
+      "answer": "N epoch마다 소규모 k-NN 정확도를 측정해 `log.txt`에 남기는 것이다. loss만으로는 감지할 수 없는 붕괴를 조기에 발견해 며칠짜리 학습을 중단 판단할 수 있다."
+    },
+    {
+      "id": "b0a02b69-2c83-4b00-b6fa-53169292e929",
+      "question": "현재 Pillow 10 환경에서 확인된 DINO의 런타임 파손은 무엇인가?",
+      "answer": "`eval_image_retrieval.py`의 `Image.ANTIALIAS`가 Pillow 10에서 제거되어 첫 배치에서 `AttributeError`로 죽는다. `--help`는 통과하므로 실행 전에는 드러나지 않으며, `Image.LANCZOS`로 교체해야 한다."
+    },
+    {
+      "id": "f7752b2a-6697-4345-a4b7-c408e149b75c",
+      "question": "DINO에서 OOM이 가장 먼저 발생하는 지점은 어디인가?",
+      "answer": "`Attention`이 `(B, heads, N, N)` 행렬을 항상 materialize하는 부분이다. patch8 + 480px이면 N=3601이 되어 헤드당 약 13M 원소가 필요하다."
+    },
+    {
+      "id": "aa789d0f-fa86-4743-b881-09f6465105d1",
+      "question": "`eval_knn.py`에서 OOM이 발생하는 원인과 해결책은?",
+      "answer": "전체 데이터셋 특징을 GPU 한 장에 올리기 때문이다(`use_cuda=True` 기본). ImageNet 128만 x 384 float32는 약 2GB이며, `--use_cuda False`로 CPU에 저장하면 해결된다."
+    },
+    {
+      "id": "1dc6469f-347c-405e-a89a-cd2e7997b80d",
+      "question": "DINO 학습의 데이터 로딩 병목 원인은 무엇인가?",
+      "answer": "crop 10장을 PIL 단계에서 생성하고 GaussianBlur가 PIL 필터라 CPU 부하가 크기 때문이다. `--num_workers 10`이 기본인 이유이며, GPU가 빠를수록 병목이 두드러진다."
+    },
+    {
+      "id": "86f60b49-0d48-47c1-bd9e-f665d9a2808b",
+      "question": "`knn_classifier`의 `num_classes` 관련 문제는 무엇인가?",
+      "answer": "호출부에서 인자를 전달하지 않아 항상 기본값 1000이 쓰인다. `scatter_` 인덱스는 실제 레이블 범위 안이라 결과는 정확하지만 `(k, 1000)` 버퍼가 낭비된다."
+    },
+    {
+      "id": "4ef1536e-ec05-448b-9e0a-c3b13dbfb1c2",
+      "question": "DINO의 재현성 리스크 중 심각도가 가장 높은 것은?",
+      "answer": "의존성 버전 미고정이다. requirements.txt 등이 전부 없어 README 산문이 유일한 기록이며, Pillow 10에서의 ANTIALIAS 파손이 바로 이 결과다."
+    },
+    {
+      "id": "c920943b-d74e-4d46-8d57-e139fbd535f9",
+      "question": "DAVIS 평가의 재현성 주의사항은?",
+      "answer": "README가 PyTorch 1.7.1이 아니면 결과 재현이 안 된다고 명시한다. torch 2.4 환경에서 측정한 수치는 논문 값과 다를 수 있다."
+    }
+  ]
+}

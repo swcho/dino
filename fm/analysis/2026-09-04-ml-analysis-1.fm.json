@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "c9f99f1f-c078-4454-9a25-7f2fefd5a1c9",
+      "question": "DINO라는 이름은 무엇의 약자인가?",
+      "answer": "self-**DI**stillation with **NO** labels의 약자다. 레이블 없이 teacher-student 자기증류로 학습한다는 방법론의 핵심을 이름에 담았다."
+    },
+    {
+      "id": "f6b54e6b-cd7f-4c1a-b752-b9e373cad9ac",
+      "question": "DINO를 제안한 논문의 제목과 발표 학회는?",
+      "answer": "Emerging Properties in Self-Supervised Vision Transformers이며 ICCV 2021에 발표됐다. arXiv 번호는 2104.14294이다."
+    },
+    {
+      "id": "dfc44247-24f0-4df7-a4f6-08b2ebf02358",
+      "question": "DINO는 어떤 선행 self-supervised 기법들의 종합인가?",
+      "answer": "BYOL(momentum encoder, 비대칭 증강), SwAV(multi-crop), MoCo(EMA teacher)의 아이디어를 종합했다. 단 negative pair, contrastive loss, predictor는 모두 사용하지 않는다."
+    },
+    {
+      "id": "5e40c747-0476-4f62-88dc-a2bbfba275d9",
+      "question": "DINO에 negative pair와 contrastive loss가 없다는 점이 왜 중요한가?",
+      "answer": "SimCLR·MoCo 계열이 의존하는 negative 샘플 없이도 표현 붕괴를 막을 수 있음을 보였기 때문이다. 대신 centering과 sharpening이라는 두 장치로 붕괴를 방지한다."
+    },
+    {
+      "id": "52b34ae4-f3e9-433a-802e-b923ff885341",
+      "question": "DINO 프로젝트에서 본체(pretext task)에 해당하는 스크립트는 무엇인가?",
+      "answer": "`main_dino.py`가 self-distillation 사전학습을 담당하며, 백본과 head 전체를 학습한다. 나머지 `eval_*.py`는 학습된 표현의 품질을 검증하는 하위 과제다."
+    },
+    {
+      "id": "0275953d-86a7-4fe8-9e18-5717d4238806",
+      "question": "DINO의 4가지 하위(downstream) 검증 과제는 무엇인가?",
+      "answer": "이미지 분류(k-NN, linear probe), 비디오 객체 분할(DAVIS), 이미지 검색(rOxford/rParis), 복제 탐지(Copydays)다. 이 중 k-NN·분할·검색은 학습 파라미터가 0개다."
+    },
+    {
+      "id": "2996834d-3de9-410a-b032-6871785a9837",
+      "question": "DINO의 하위 과제 표가 논문의 어떤 주장을 뒷받침하는가?",
+      "answer": "대부분의 하위 과제에서 학습할 파라미터가 0개이거나 선형층 하나뿐이라는 사실이다. 즉 DINO ViT의 특징이 그 자체로 충분히 좋아 추가 학습이 거의 필요 없다는 주장이다."
+    },
+    {
+      "id": "1ad25e1d-2057-4cc1-a6a6-a2510c4bb034",
+      "question": "DINO 코드베이스는 어떤 ML 프레임워크와 고수준 라이브러리를 쓰는가?",
+      "answer": "순수 PyTorch `nn.Module`만 사용한다. PyTorch Lightning, HuggingFace Trainer, mmcv 레지스트리는 전부 쓰지 않는다."
+    },
+    {
+      "id": "e60765d0-efa1-4551-92be-bb7a90af46a0",
+      "question": "DINO가 timm 같은 모델 라이브러리에 의존하지 않는 이유와 결과는?",
+      "answer": "ViT를 `vision_transformer.py` 한 파일에 자체 구현했기 때문이다. 덕분에 외부 패키지 없이 읽고 실행할 수 있으며 torch 1.7에서 2.4로의 전환도 무수정 통과했다."
+    },
+    {
+      "id": "4a59326e-60fb-42a3-a266-a6dbf37e508b",
+      "question": "DINO 학습에 CUDA가 필수인 이유는?",
+      "answer": "`init_distributed_mode`가 GPU가 없으면 `sys.exit(1)`로 종료하고, NCCL backend·SyncBatchNorm·AMP를 사용하기 때문이다. 예외적으로 `visualize_attention.py`만 CPU 폴백을 지원한다."
+    },
+    {
+      "id": "ed96e67f-2935-4c72-828a-0ae990a14800",
+      "question": "DINO는 어떤 분산 학습 방식을 쓰며 쓰지 않는 것은 무엇인가?",
+      "answer": "`DistributedDataParallel`(DDP)와 `torch.distributed`를 쓴다. FSDP, DeepSpeed, accelerate는 사용하지 않는다."
+    },
+    {
+      "id": "648d2aaa-6b8a-49ee-a586-c5719f1729cf",
+      "question": "DINO의 설정 관리 방식은 무엇인가?",
+      "answer": "`argparse` 단독이다. Hydra, OmegaConf, yacs, dataclass config, `configs/` 디렉토리가 전부 없다."
+    },
+    {
+      "id": "3719e386-a39a-4903-a2e4-cd2204a6b9f1",
+      "question": "DINO의 실험 추적 도구는 무엇인가?",
+      "answer": "wandb, tensorboard, mlflow 등 전용 도구를 전혀 쓰지 않는다. `output_dir/log.txt`에 JSON Lines로 append하는 것이 전부다."
+    },
+    {
+      "id": "e9e962e2-b530-4824-a0e0-b8c86bdebdad",
+      "question": "DINO 저장소의 의존성 매니페스트 상황은?",
+      "answer": "requirements.txt, pyproject.toml, environment.yml이 전부 없다. README 산문에 적힌 torch 1.7.1, torchvision 0.8.2가 유일한 버전 기록이다."
+    },
+    {
+      "id": "fd1aa640-da3b-41dc-8ede-4e815e6d32fb",
+      "question": "DINO 학습 시 모델은 어떤 2단 구조인가?",
+      "answer": "`MultiCropWrapper(backbone, head)` 형태의 backbone + head 2단이다. neck이나 FPN은 없으며 backbone은 ViT / XCiT / torchvision convnet으로 교체 가능하다."
+    },
+    {
+      "id": "874d5f85-554a-47da-aa96-e741c0c215f2",
+      "question": "DINO의 teacher 네트워크는 어떻게 갱신되는가?",
+      "answer": "student와 동일한 구조이지만 `requires_grad=False`로 역전파가 없고, student 파라미터의 EMA로만 갱신된다. 즉 teacher는 gradient를 전혀 받지 않는다."
+    },
+    {
+      "id": "417efcdc-29fd-4384-ab0c-d4acceb4c094",
+      "question": "ViT-S/16의 백본과 DINOHead 파라미터 수는 각각 얼마인가?",
+      "answer": "백본 21.7M, DINOHead 22.4M으로 학습 시 총 44.0M이다. 즉 head가 백본보다 크다."
+    },
+    {
+      "id": "71222ceb-3195-4df0-8707-ecb1c79144a7",
+      "question": "ViT-S에서 DINOHead가 백본보다 큰 이유는?",
+      "answer": "`out_dim=65536`이라 마지막 층 하나가 `256 x 65536 = 16.8M` 파라미터를 차지하기 때문이다. head 전체는 약 22.4M이다."
+    },
+    {
+      "id": "9bff05c1-5d23-4919-8d2d-b9e8986f3df9",
+      "question": "DINOHead는 학습 후 어떻게 되는가? 실무적 함의는?",
+      "answer": "학습이 끝나면 통째로 버려지고 백본만 배포된다. 공개된 backbone only 가중치가 ViT-S 21M, ViT-B 85M인 이유이며, 학습 시 VRAM 계획에는 반드시 head를 포함해야 한다."
+    }
+  ]
+}

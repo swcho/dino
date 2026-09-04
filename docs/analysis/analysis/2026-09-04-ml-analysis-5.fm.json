@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "2e58d9af-5502-401d-b724-794da1897254",
+      "question": "`main_dino.py`의 체크포인트에는 무엇이 저장되는가?",
+      "answer": "`student`, `teacher`, `optimizer`, `epoch`, `args`, `dino_loss`와 fp16 사용 시 `fp16_scaler`가 저장된다. ViT-S 기준 약 440MB다."
+    },
+    {
+      "id": "4c09f13b-ec2c-472e-9bdb-3aea2887abb2",
+      "question": "DINO 체크포인트가 440MB나 되는 이유는?",
+      "answer": "student와 teacher 두 모델 전체에 optimizer 상태까지 함께 저장하기 때문이다. `--saveckp_freq 20` 기본값으로 100 epoch을 돌리면 별도 스냅샷이 여러 개 쌓이므로 디스크 계획이 필요하다."
+    },
+    {
+      "id": "f3a0d536-3d43-43ac-ac8f-0fece15c87d3",
+      "question": "DINO 학습의 resume은 어떻게 동작하는가?",
+      "answer": "`restart_from_checkpoint`가 `output_dir/checkpoint.pth`가 존재하면 자동으로 로드한다. `**kwargs`로 복원 대상을 이름으로 선언하는 범용 설계다."
+    },
+    {
+      "id": "a8ccda67-b375-4683-bebd-17e10068995c",
+      "question": "`eval_linear.py`에서 best 모델이 저장되지 않는 문제는 무엇인가?",
+      "answer": "`best_acc`를 추적해 출력하지만 `save_dict`는 매 epoch 현재 state_dict로 덮어쓴다. 따라서 보고되는 Top-1 수치와 저장된 체크포인트가 서로 다른 모델일 수 있다."
+    },
+    {
+      "id": "0c5cd8cd-a996-4091-afb8-36afefccf817",
+      "question": "DINO 사전학습 루프에는 어떤 검증이 포함되어 있는가?",
+      "answer": "검증이 전혀 없다. loss, lr, wd만 로깅하며 조기 종료나 best 선택이 불가능하다."
+    },
+    {
+      "id": "2a91ef9f-368b-46c4-a9eb-47c4b2310466",
+      "question": "사전학습 중 loss만 보고 표현 품질을 판단할 수 없는 이유는?",
+      "answer": "표현이 붕괴해도 loss는 낮아질 수 있기 때문이다. 실제 품질을 보려면 학습을 멈추고 `eval_knn.py`를 따로 돌려야 한다."
+    },
+    {
+      "id": "a2cfef4b-ec13-4632-b95f-15d95574a7ea",
+      "question": "DINO 학습 한 step의 순서를 gradient 처리 관점에서 요약하라.",
+      "answer": "autocast 안에서 teacher(global 2개)와 student(전체) forward → loss 계산 → `scaler.scale(loss).backward()` → `unscale_` 후 `clip_gradients` → `cancel_gradients_last_layer` → `scaler.step()` 순이다."
+    },
+    {
+      "id": "14cade32-257f-4a8a-b173-97e59b372343",
+      "question": "`cancel_gradients_last_layer`는 정확히 무엇을 하는가?",
+      "answer": "`epoch < freeze_last_layer`인 동안 이름에 `last_layer`가 포함된 파라미터의 `grad`를 `None`으로 만든다. 기본값 1로 첫 epoch 동안만 head 마지막 층을 얼린다."
+    },
+    {
+      "id": "7889ae8f-6b89-4be9-8392-ed46453e7509",
+      "question": "DINO에서 전역 iteration `it`은 어떻게 계산되며 어디에 쓰이는가?",
+      "answer": "`it = len(data_loader) * epoch + i`로 계산한다. `lr_schedule[it]`, `wd_schedule[it]`, `momentum_schedule[it]` 조회에 쓰인다."
+    },
+    {
+      "id": "03a1485f-c46c-4e95-989e-3ac99e5adb25",
+      "question": "DINO에서 weight decay 스케줄은 옵티마이저의 어느 param_group에만 적용되는가?",
+      "answer": "`i == 0`인 첫 번째 그룹(regularized)에만 적용된다. bias·Norm이 들어간 두 번째 그룹은 `weight_decay=0`으로 고정이다."
+    },
+    {
+      "id": "0b81565c-8ad2-4390-8814-a59f17ce637c",
+      "question": "DINO의 실행 설정은 어디에 영속적으로 기록되는가?",
+      "answer": "체크포인트의 `args` 키에 pickle되어 저장되는 것이 유일한 영속 기록이다. 재현용 인자는 저장소가 아니라 각 모델의 공개 `args.txt` 배포 아티팩트로 제공된다."
+    },
+    {
+      "id": "323e9dca-5b84-44ee-b061-36f147eca9a2",
+      "question": "`--out_dim 65536`은 무엇을 의미하는가?",
+      "answer": "DINOHead가 출력하는 프로토타입의 개수다. 데이터셋의 클래스 수와는 완전히 무관하며, 표현력 확보를 위해 크게 잡은 값이다."
+    },
+    {
+      "id": "31b5ac5b-f962-4e7e-8c2b-609a66ec8cb2",
+      "question": "`--teacher_temp`를 0.07로 올릴 때 함께 해야 할 조정은?",
+      "answer": "`--warmup_teacher_temp_epochs 30`을 동반해야 한다. 성능은 오르지만 불안정해지므로 warmup으로 천천히 도달시켜야 한다."
+    },
+    {
+      "id": "0c43d011-75ee-4104-8b01-d0dc046b498c",
+      "question": "`--arch` 선택지에 `list_models`나 `get_model` 같은 값이 나타나는 이유는?",
+      "answer": "선택지를 `torchvision_models.__dict__.keys()`로 만들었는데 torchvision 0.13+에 이런 헬퍼 함수들이 추가됐기 때문이다. argparse는 통과시키지만 이후 크래시한다."
+    },
+    {
+      "id": "db5957eb-82b8-40f4-a319-2f265e23a024",
+      "question": "DINO에서 데이터 경로는 환경변수로 지정할 수 있는가?",
+      "answer": "없다. 전부 `--data_path` CLI 인자로만 지정하며, 기본값은 `/path/to/imagenet/train/`이라는 플레이스홀더다."
+    },
+    {
+      "id": "33472fdd-46a3-45b8-9979-95ef7f0a2fff",
+      "question": "DINO가 사용하는 주요 분산 관련 환경변수는?",
+      "answer": "`RANK`, `WORLD_SIZE`, `LOCAL_RANK`(torchrun)와 `MASTER_ADDR`, `MASTER_PORT`, 그리고 Slurm의 `SLURM_PROCID` 등이다. 단일 GPU 시 MASTER 값은 코드가 자동 설정한다."
+    },
+    {
+      "id": "17cb6949-481d-4e60-843d-e9a5ced0a2e5",
+      "question": "DINO의 `log.txt`에 기록되는 항목은 무엇인가?",
+      "answer": "`train_loss`, `train_lr`, `train_wd`, `epoch` 뿐이다. `MetricLogger`가 stdout에 찍는 ETA, max mem, data time은 파일로 남지 않는다."
+    },
+    {
+      "id": "c8893640-0850-43bb-8d42-eab77ae9a00b",
+      "question": "`utils.get_sha()`는 재현성에 어떻게 기여하는가?",
+      "answer": "git commit, status, branch를 stdout에 출력해 어떤 코드 버전으로 학습했는지 추적할 수 있게 한다. 다만 stdout에만 남고 log.txt에는 기록되지 않는다."
+    },
+    {
+      "id": "9bffc713-8912-48ab-a692-7ff718d0a7fd",
+      "question": "`fix_random_seeds`는 어떤 난수 생성기를 시드하고 무엇을 빠뜨리는가?",
+      "answer": "`torch.manual_seed`, `torch.cuda.manual_seed_all`, `np.random.seed`를 호출한다. Python 표준 `random` 모듈은 시드하지 않는다."
+    }
+  ]
+}

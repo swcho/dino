@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "abf0cbe1-d2dd-4e49-b71d-5e0622396d73",
+      "question": "DINO 저장소는 어떤 논문의 공식 구현체인가?",
+      "answer": "ICCV 2021 논문 *Emerging Properties in Self-Supervised Vision Transformers*의 공식 구현체다. 레이블 없이 ViT를 학습시키는 self-distillation 기법을 제공한다."
+    },
+    {
+      "id": "ee0f80c6-87b0-4e55-aac9-7fe9b17fa95d",
+      "question": "DINO 논문의 핵심 발견은 무엇인가?",
+      "answer": "self-supervised로 학습된 ViT의 self-attention이 명시적 지도 없이 객체 경계(semantic segmentation)를 스스로 담아낸다는 것이다. 어텐션 맵만 봐도 물체 윤곽이 드러난다."
+    },
+    {
+      "id": "2f6b1837-5c63-4ef7-b627-96d12522053f",
+      "question": "DINO 백본은 fine-tuning 없이 어느 정도 성능을 내는가?",
+      "answer": "k-NN 분류만으로 ImageNet 74.5%~78.3%에 도달한다. 분류기 학습 없이도 강력한 범용 특징 추출기로 동작한다는 뜻이다."
+    },
+    {
+      "id": "aca021b4-fa89-4cfc-b0a7-2819b173e97b",
+      "question": "DINO 저장소의 코드 규모는 어느 정도인가?",
+      "answer": "최상위 Python 12개 파일, 총 3,782 LOC이다. 저장소 전체는 130개 파일이지만 대부분은 논문 PDF와 이미지다."
+    },
+    {
+      "id": "797d7f4d-1c55-49be-a9ca-138f744d36f4",
+      "question": "DINO의 의존성 관리 방식은 어떠한가?",
+      "answer": "requirements.txt, pyproject.toml, setup.py가 모두 부재한다. 패키지화도 되어 있지 않아 최상위 스크립트를 직접 실행하는 flat script 구조다."
+    },
+    {
+      "id": "55a3776f-8c3b-48d7-80ba-6bb3a5783c34",
+      "question": "DINO가 외부에 모델을 배포하는 인터페이스는 무엇인가?",
+      "answer": "`hubconf.py`를 통한 PyTorch Hub다. `torch.hub.load('facebookresearch/dino:main', 'dino_vits16')` 형태로 사전학습 백본 9종을 제공한다."
+    },
+    {
+      "id": "956a281c-44c9-4e5a-a003-7985f8d3391c",
+      "question": "DINO 저장소의 두 공용 코어 모듈은 무엇인가?",
+      "answer": "`utils.py`(829 LOC)와 `vision_transformer.py`(291 LOC)다. 모든 진입점 스크립트가 이 둘만 공유한다."
+    },
+    {
+      "id": "dc2fa654-6de1-4237-bd7f-fe0d51a25bfd",
+      "question": "DINO의 'Flat script collection' 아키텍처 패턴이란 무엇인가?",
+      "answer": "패키지도 클래스 계층도 없이 각 `.py`가 독립 CLI 진입점인 구조다. 논문 재현 코드의 전형적 형태로, 공용 모듈 두 개만 공유한다."
+    },
+    {
+      "id": "78c810fd-967a-4334-98a0-54ef1158879c",
+      "question": "DINO에서 'Strategy by string dispatch' 패턴은 어떻게 구현되는가?",
+      "answer": "`vits.__dict__[args.arch]`나 `torchvision_models.__dict__[...]`로 문자열 하나만 바꿔 아키텍처를 교체한다. `--arch` 인자 값이 곧 딕셔너리 키가 된다."
+    },
+    {
+      "id": "c4b3512e-11e3-485c-910e-00c6ba3177dd",
+      "question": "'Frozen-backbone evaluation protocol'이란 DINO에서 무엇을 의미하는가?",
+      "answer": "모든 `eval_*.py`가 '백본 동결 → 특징 추출 → 가벼운 분류기/검색'이라는 동일 골격을 공유한다는 뜻이다. 백본은 절대 갱신되지 않는다."
+    },
+    {
+      "id": "9e668836-ac3b-49d7-ac86-5e480c268b56",
+      "question": "DINO 저장소의 진입점은 총 몇 개이며 어떤 형태인가?",
+      "answer": "9개이며 모두 `if __name__ == '__main__':` 형태다. 학습 2개(main_dino, run_with_submitit), 평가 5개, 시각화 2개로 나뉜다."
+    },
+    {
+      "id": "0ac6d14d-e213-4840-be22-a275a25dfc1a",
+      "question": "DINO 진입점 중 데이터가 전혀 필요 없는 것은 무엇인가?",
+      "answer": "`visualize_attention.py`다. 사전학습 가중치와 예시 이미지를 자동으로 다운로드하므로 아무 준비 없이 실행할 수 있다."
+    },
+    {
+      "id": "98e36d30-b1ed-4860-a467-feeffa31797f",
+      "question": "DINO 사전학습 한 iteration에서 teacher와 student의 입력 차이는?",
+      "answer": "teacher는 global crop 2장만 보고, student는 전체 crop(global 2 + local N)을 본다. 이 비대칭이 local-to-global correspondence 학습 신호를 만든다."
+    },
+    {
+      "id": "35b43d4c-02b5-49c3-834d-34de0e314b5a",
+      "question": "DINO 사전학습 셋업에서 `cosine_scheduler`는 몇 개 만들어지는가?",
+      "answer": "3개다. learning rate, weight decay, teacher momentum 각각에 대해 iteration 단위 배열을 미리 생성한다."
+    },
+    {
+      "id": "83368391-c98b-40b5-bee3-40abc673c827",
+      "question": "DINO에서 teacher는 어떻게 초기화되는가?",
+      "answer": "student와 동일한 구조로 만든 뒤 `teacher_without_ddp.load_state_dict(student.module.state_dict())`로 student 가중치를 복사한다. 그리고 모든 파라미터의 `requires_grad`를 False로 만든다."
+    },
+    {
+      "id": "77c5e2af-137e-4e2b-90c7-da1828c6049d",
+      "question": "레이블이 없는 DINO 학습에서 자명해(붕괴)로 빠질 위험이 있는 이유는?",
+      "answer": "두 네트워크가 모든 입력에 상수를 출력하면 손실이 완벽히 낮아지기 때문이다. 레이블이라는 외부 기준이 없어 이 해를 막을 장치가 별도로 필요하다."
+    },
+    {
+      "id": "2b462589-02fb-4398-b6b7-80b1b42d20a6",
+      "question": "DINO의 붕괴 방지 3가지 장치와 각각의 역할은?",
+      "answer": "Centering(teacher 출력에서 배치 평균을 빼 uniform 쪽으로 압박), Sharpening(teacher temperature 0.04 < student 0.1로 collapse 쪽으로 압박), freeze_last_layer(초기 1 epoch head 마지막 층 gradient 차단)다."
+    },
+    {
+      "id": "81e3b97e-b630-4a75-bcf3-e282a17b7224",
+      "question": "k-NN 평가 흐름에서 특징을 L2 정규화하는 이유는?",
+      "answer": "정규화하면 내적이 곧 코사인 유사도가 되기 때문이다. `F.normalize(dim=1, p=2)` 후 `feats @ train_feats.T`로 유사도를 바로 계산한다."
+    },
+    {
+      "id": "bef6e66c-ba94-49bf-b9ee-2e81ff1be75c",
+      "question": "`knn_classifier`의 가중 투표 방식은 무엇인가?",
+      "answer": "top-k 이웃을 구한 뒤 `exp(distance / T)`로 이웃마다 가중치를 준다. 기본 온도 T는 0.07이며, 가까운 이웃일수록 투표력이 커진다."
+    }
+  ]
+}

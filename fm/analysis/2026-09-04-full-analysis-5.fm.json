@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "00369dfe-4e75-40b1-aed5-22be04cf39cc",
+      "question": "DINO를 1분 안에 동작 확인하려면 어떤 명령을 쓰는가?",
+      "answer": "`python visualize_attention.py --arch vit_small --patch_size 8 --output_dir /tmp/dino_attn`이다. 데이터도 체크포인트도 필요 없이 자동 다운로드로 실행된다."
+    },
+    {
+      "id": "5734c8bf-c97e-4fb1-a1ba-0911c8fb056a",
+      "question": "DINO 전체 파이프라인 스모크 테스트에서 `--warmup_epochs 0`을 주는 이유는?",
+      "answer": "기본값 10이 `--epochs 2`보다 커서 `cosine_scheduler`의 assert가 실패하기 때문이다. 짧은 실험에서는 반드시 낮춰야 한다."
+    },
+    {
+      "id": "7f131f4e-2216-4106-a9cc-f81b5e546e61",
+      "question": "torch 2.4에서 DINO 원본 코드를 돌릴 때의 호환성 상태는?",
+      "answer": "수정 없이 동작하며 `torch.cuda.amp.autocast` / `GradScaler` FutureWarning만 출력된다. 단일 GPU 폴백 덕에 `torchrun` 없이 `python main_dino.py`도 가능하다."
+    },
+    {
+      "id": "57f16f84-817a-429d-8b1a-a699a458a3ab",
+      "question": "DINO가 timm 없이 ViT를 자체 구현한 것이 왜 좋은 선택인가?",
+      "answer": "`pip install` 없이 읽고 실행할 수 있어 논문 재현 코드로 최적이다. 실제로 torch 1.7에서 2.4로의 전환을 코드 수정 없이 통과했다."
+    },
+    {
+      "id": "fd30fd18-51eb-4423-b4be-5007a7e9a707",
+      "question": "DINO 코드에서 배울 만한 주석 작성 관행은?",
+      "answer": "`w0 + 0.1` 같은 마법의 상수에 GitHub 이슈 링크를 달고, XCiT 튜플 반환 처리에도 원본 코드 링크를 남겼다. '무엇'이 아니라 '왜'를 남긴 주석들이다."
+    },
+    {
+      "id": "d00df4af-13ec-448e-8ecd-b2884ff8a926",
+      "question": "DINO의 argparse help 문자열이 특별한 점은?",
+      "answer": "단순 설명이 아니라 '작은 배치에서는 momentum 0.9995 권장' 같은 운영 지침을 담고 있다. 하이퍼파라미터 문서화가 코드 안에 통합된 형태다."
+    },
+    {
+      "id": "7422d20e-919f-497f-83a0-a45f988c85fd",
+      "question": "DINO에서 가장 큰 개선 과제로 지적된 것은?",
+      "answer": "의존성 매니페스트 추가다. `requirements.txt` 한 장이면 재현성이 크게 오르는데, 현재는 `import cv2`가 어느 스크립트에 필요한지 파일을 열어봐야 알 수 있다."
+    },
+    {
+      "id": "2c1eb5ec-d10e-4cd8-86ad-fb06a4cf3f06",
+      "question": "DINO 진입점들의 `output_dir` 처리가 일관되지 않은 부분은?",
+      "answer": "`visualize_attention.py`는 `makedirs`를 호출하지만 `main_dino.py`는 하지 않고, `eval_linear.py`는 만들지도 않으면서 파일을 열어 실제로 죽는다. `mkdir(parents=True, exist_ok=True)` 한 줄로 통일할 수 있다."
+    },
+    {
+      "id": "18e4858d-0446-4f5a-a4f2-b784af0df185",
+      "question": "`torch.load`에 `weights_only=True`를 명시해야 하는 이유는?",
+      "answer": "torch 2.6부터 기본값이 바뀌어 향후 파손 위험이 있고, 신뢰할 수 없는 체크포인트 로드 시 임의 코드 실행 위험도 줄이기 때문이다. 현재 3곳 모두 지정이 없다."
+    },
+    {
+      "id": "b0f10a1f-c271-4fa9-8fd7-2eab964b6601",
+      "question": "DINO 저장소의 테스트·CI 상황은?",
+      "answer": "테스트도 CI도 전혀 없으며 `.github/`에 워크플로가 하나도 없다. 이 포크의 `SAMPLES.md`가 사실상 그 공백을 메우고 있다."
+    },
+    {
+      "id": "ee275084-b799-4843-835a-aded1eb95ac4",
+      "question": "`DINOLoss.forward`의 이중 루프가 이해하기 어려운 이유는?",
+      "answer": "`v == iq` skip의 의미(같은 view 제외)가 코드만 봐서는 드러나지 않기 때문이다. 논문 Figure 2를 함께 봐야 의도가 이해된다."
+    },
+    {
+      "id": "631b341f-bc02-4f70-a874-674aa51d37ee",
+      "question": "`MultiCropWrapper.forward`가 의존하는 문서화되지 않은 전제는?",
+      "answer": "crop 리스트가 해상도별로 정렬돼 있어야 한다는 암묵적 전제다. 이 계약이 코드 어디에도 명시돼 있지 않아 증강 순서를 바꾸면 조용히 forward 횟수가 늘어난다."
+    },
+    {
+      "id": "00a1e57e-37d0-42e6-86af-58b97f24b764",
+      "question": "`eval_knn.extract_features`의 분산 재조립이 위험한 코드인 이유는?",
+      "answer": "`all_gather` + `index_copy_` + `DistributedSampler` 패딩 처리가 얽혀 있는데, 단일 GPU에서는 이 경로가 절대 드러나지 않기 때문이다. 멀티 GPU에서만 문제가 나타난다."
+    },
+    {
+      "id": "cfb906ed-1672-4bd3-a273-902c7f849510",
+      "question": "DINO의 보안 관점 이슈 두 가지는?",
+      "answer": "`torch.load`에 `weights_only`가 지정되지 않은 3곳(임의 코드 실행 가능)과, `visualize_attention.py`가 인자 없이 실행되면 원격 URL에서 이미지를 자동 fetch하는 점(폐쇄망 실패)이다."
+    },
+    {
+      "id": "73679b1e-bdf3-41eb-a2bf-e96b14bacd37",
+      "question": "`train_one_epoch`의 `torch.cuda.synchronize()`가 성능에 미치는 영향은?",
+      "answer": "매 iteration마다 호출되어 파이프라인을 직렬화한다. 로깅 정확도를 위한 것이지만 GPU와 CPU의 비동기 실행 이점을 잃는다."
+    },
+    {
+      "id": "93f7be48-9154-4d96-9431-e787be12f7af",
+      "question": "DINO에서 사전학습 가중치 URL이 중복된 곳은 몇 군데인가?",
+      "answer": "네 곳이다. `utils.load_pretrained_weights`, `hubconf.py`, `visualize_attention.py`, `video_generation.py`에 매핑이 흩어져 있어 모델 추가 시 전부 고쳐야 한다."
+    },
+    {
+      "id": "fea59f22-f305-4973-9c51-99bec0fcd8d8",
+      "question": "DINO 학습 시 디스크 용량 계획이 필요한 이유는?",
+      "answer": "체크포인트 1개가 ViT-S 기준 약 440MB이고, `--saveckp_freq 20` 기본값으로 100 epoch을 돌리면 별도 스냅샷이 여러 개 쌓이기 때문이다."
+    },
+    {
+      "id": "a7374390-b5e3-42fc-a8bf-ef4f15385f71",
+      "question": "DINO 프로젝트를 이해하기 위한 권장 읽기 순서는?",
+      "answer": "README 모델 표 → `vision_transformer.py` → `main_dino.py` → `utils.py`(3개 함수만) → `eval_knn.py` 순이다. `utils.py`는 통독하지 말고 `MultiCropWrapper`, `cosine_scheduler`, `init_distributed_mode`만 본다."
+    }
+  ]
+}

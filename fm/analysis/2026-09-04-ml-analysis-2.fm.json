@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "0845f40d-8838-4b48-8536-1abcb79be516",
+      "question": "vit_tiny / vit_small / vit_base의 embed_dim, depth, heads는 각각 얼마인가?",
+      "answer": "vit_tiny는 192/12/3, vit_small은 384/12/6, vit_base는 768/12/12이다. depth는 세 모델 모두 12로 동일하다."
+    },
+    {
+      "id": "12760fa6-de61-447a-9490-d363562ca6f0",
+      "question": "`patch_size`를 16에서 8로 바꾸면 파라미터 수와 연산량은 어떻게 달라지는가?",
+      "answer": "파라미터 수는 전혀 바뀌지 않는다. 대신 토큰 수가 4배(196→784)가 되어 어텐션 연산량이 약 16배로 늘어난다."
+    },
+    {
+      "id": "4dccfc5e-e866-4bb7-9aba-72958faa6d2a",
+      "question": "224px 입력에서 patch16과 patch8의 토큰 수는 각각 몇 개인가?",
+      "answer": "patch16은 196개, patch8은 784개다. 여기에 CLS 토큰 1개가 더해져 각각 197, 785 토큰이 된다."
+    },
+    {
+      "id": "9c56dcdd-0790-4be3-b79e-eccd718e5b97",
+      "question": "ViT-S/16에 (2,3,224,224)를 넣었을 때 PatchEmbed 직후 shape은?",
+      "answer": "`(2, 196, 384)`이다. `Conv2d(3→384, kernel=16, stride=16)` 후 flatten(2)과 transpose를 거친 결과다."
+    },
+    {
+      "id": "f4e0147e-a933-4aa7-b668-6b173be7da0f",
+      "question": "`prepare_tokens`를 거치면 텐서 shape이 어떻게 변하는가?",
+      "answer": "`(2, 196, 384)`에서 CLS 토큰이 concat되어 `(2, 197, 384)`가 된다. 이후 `interpolate_pos_encoding`으로 계산한 위치 임베딩이 더해진다."
+    },
+    {
+      "id": "08b2003c-49ee-4107-898f-43dc1dc09a75",
+      "question": "`VisionTransformer.forward`의 최종 출력 shape과 의미는?",
+      "answer": "`(B, 384)`로 LayerNorm 후 `x[:, 0]`, 즉 CLS 토큰만 취한 것이다. 이 벡터가 학습·k-NN·검색에 쓰이는 이미지 전역 표현이다."
+    },
+    {
+      "id": "4cae7944-65e5-43dc-9dfa-be3df539094b",
+      "question": "DINOHead의 내부 구조를 순서대로 설명하라.",
+      "answer": "`Linear(D→2048)+GELU → Linear(2048→2048)+GELU → Linear(2048→256)` MLP 후 `F.normalize(dim=-1, p=2)`로 L2 정규화하고, `weight_norm(Linear(256→65536, bias=False))`를 통과한다."
+    },
+    {
+      "id": "65c29eb2-4b4b-4f68-a218-b7662f4d8bdf",
+      "question": "DINOHead에서 L2 정규화(`F.normalize`)를 하는 지점과 기하학적 의미는?",
+      "answer": "bottleneck 256차원 출력 직후, 마지막 weight_norm 선형층 직전에 적용한다. 특징을 단위 하이퍼구 위로 투영하는 효과가 있다."
+    },
+    {
+      "id": "0fbcd2ff-2072-417b-bc6d-958d12a1fa0e",
+      "question": "`norm_last_layer=True`는 구체적으로 무엇을 하는가?",
+      "answer": "마지막 weight_norm 선형층의 `weight_g`를 1로 고정하고 `requires_grad=False`로 만든다. 학습 초기를 안정화하며, `False`는 ViT-S에서만 안전하다고 README가 명시한다."
+    },
+    {
+      "id": "91d54f7e-0b51-4eb8-8cd6-eb9f28b9bd8a",
+      "question": "`get_last_selfattention`의 출력 shape과 시각화에서 쓰는 슬라이스는?",
+      "answer": "ViT-S/16 기준 `(B, 6, 197, 197)`이다. 시각화에서는 `[0, :, 0, 1:]`을 취해 CLS 토큰이 각 패치를 보는 정도를 헤드별로 뽑는다."
+    },
+    {
+      "id": "9db548ee-561d-42ab-89d0-c90aab34fd9a",
+      "question": "`get_intermediate_layers(x, 4)`의 출력과 linear probe 특징 차원은?",
+      "answer": "`4 x (B, 197, 384)`를 반환하며, 각 블록의 CLS 토큰을 concat해 `(B, 1536)` = 384x4 차원 특징을 만든다."
+    },
+    {
+      "id": "b98f4b19-13d4-4c48-83bd-5ee56405708c",
+      "question": "96px local crop을 ViT-S/16에 넣으면 토큰 shape이 어떻게 되는가?",
+      "answer": "`(B, 37, 384)`가 된다. 36개 패치(6x6)에 CLS 1개를 더한 것이며, pos_embed가 자동으로 보간되어 대응한다."
+    },
+    {
+      "id": "9cfa1357-64f1-41e2-a063-7f6855f85919",
+      "question": "DINO 코드에 커스텀 CUDA 커널이 있는가?",
+      "answer": "없다. 전부 순수 PyTorch 연산이며, 직접 구현한 것은 `Attention`, `DropPath`, `trunc_normal_`, `LARS` 네 가지뿐이다."
+    },
+    {
+      "id": "15ed3dd5-0b8a-4ab0-bdc9-2aa2df764b86",
+      "question": "DINO의 `Attention.forward`가 표준 구현과 다른 점은?",
+      "answer": "출력과 함께 어텐션 맵을 항상 반환한다(`return x, attn`). 어텐션 시각화를 위해 명시적인 `softmax(q@k.T * scale)` 계산을 유지한다."
+    },
+    {
+      "id": "6b5bdb86-9795-446b-beb1-99117e5b2121",
+      "question": "DINO가 `F.scaled_dot_product_attention`(FlashAttention)을 쓰지 못하는 이유와 대가는?",
+      "answer": "`(attn @ v)`를 명시적으로 계산해 어텐션 맵을 반환해야 하기 때문이다. 그 결과 `(B, heads, N, N)` 행렬이 항상 materialize되어 patch8·고해상도에서 OOM의 주범이 된다."
+    },
+    {
+      "id": "b8e56518-3a91-483b-977a-00b42f25fddb",
+      "question": "`DropPath`(stochastic depth)는 DINO에서 어떻게 설정되는가?",
+      "answer": "`--drop_path_rate 0.1`이 기본이며, `torch.linspace(0, drop_path_rate, depth)`로 깊이에 걸쳐 선형 증가시킨다. 얕은 블록일수록 덜 드롭된다."
+    },
+    {
+      "id": "17f38bcf-e448-412e-9b7c-83d788b5c0b7",
+      "question": "DINO의 `LARS` 옵티마이저는 어디서 가져왔고 언제 쓰는가?",
+      "answer": "Barlow Twins 구현에서 가져온 layer-wise adaptive LR 옵티마이저다. convnet을 대배치로 학습할 때 `--optimizer lars`로 선택한다."
+    },
+    {
+      "id": "1ff0bcff-8d1b-4396-bb9a-963fa686a963",
+      "question": "DINO 사전학습 가중치는 어디서 자동 다운로드되며 몇 종인가?",
+      "answer": "`https://dl.fbaipublicfiles.com/dino/`에서 받으며 총 9종이다. vit_small/8,16, vit_base/8,16, xcit 4종, resnet50이 있다."
+    },
+    {
+      "id": "2088c267-9ebc-4d35-a9d5-80f8a685bf6c",
+      "question": "backbone only 가중치와 full checkpoint의 로딩 방식 차이는?",
+      "answer": "backbone only는 prefix가 없어 `strict=True`로 로드한다. full checkpoint는 `--checkpoint_key`로 `teacher`/`student`를 고른 뒤 `module.`·`backbone.` prefix를 제거하고 `strict=False`로 로드한다."
+    }
+  ]
+}

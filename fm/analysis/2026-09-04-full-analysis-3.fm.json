@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "b9b27e1c-eaad-45ee-a561-4831c7ec4ae0",
+      "question": "`interpolate_pos_encoding` 덕분에 얻는 실질적 이점은?",
+      "answer": "하나의 체크포인트가 모든 입력 해상도에 재사용된다. 224 학습, 96 local crop, 480 시각화, 임의 DAVIS 해상도를 모델 하나로 처리할 수 있다."
+    },
+    {
+      "id": "602ce780-fd21-4b45-a8a6-cf251ce2d346",
+      "question": "`DINOHead`의 `out_dim=65536`은 무엇을 의미하는가?",
+      "answer": "분류 클래스 수가 아니라 '프로토타입' 차원이다. 클래스 수와 무관하게 크게 잡아 표현력을 확보하려는 설계다."
+    },
+    {
+      "id": "1a455d68-e0ac-4881-b9d0-da24ff7822c9",
+      "question": "`DINOHead`의 마지막 층에서 `norm_last_layer=True`가 하는 일은?",
+      "answer": "`weight_norm` 적용 후 `weight_g`를 1로 고정해 학습되지 않게 만든다. 학습 초기를 안정화하며, 이 고정을 푸는 것은 ViT-S에서만 안전하다고 README가 명시한다."
+    },
+    {
+      "id": "486d1bad-7f5a-4d68-a504-531a97f57077",
+      "question": "`main_dino.py`의 다섯 가지 핵심 심볼은?",
+      "answer": "`get_args_parser`(30여 개 하이퍼파라미터), `train_dino`(셋업+epoch 루프), `train_one_epoch`(iteration 루프), `DINOLoss`, `DataAugmentationDINO`다."
+    },
+    {
+      "id": "6872872f-3527-4e54-8e69-2cacb24cd102",
+      "question": "`DINOLoss.forward`에서 `if v == iq: continue`가 본질적인 이유는?",
+      "answer": "같은 crop을 두 네트워크에 넣어 비교하면 학습 신호가 없기 때문이다. 서로 다른 view끼리만 맞추게 해 '일부만 봐도 전체와 같은 표현이 나와야 한다'는 제약을 만든다."
+    },
+    {
+      "id": "8767526b-e2fd-41c8-a45c-35a7c2253fa0",
+      "question": "DINO 손실의 총 항 수를 구하는 식은?",
+      "answer": "`2 x (2+N) - 2`다. teacher view 2개와 student view (2+N)개의 모든 쌍에서 같은 view 쌍 2개를 제외한 값이다."
+    },
+    {
+      "id": "41343066-a04e-404b-b544-db6d1cff5942",
+      "question": "DINO의 세 가지 crop 증강이 서로 다른 점은?",
+      "answer": "`global_transfo1`은 GaussianBlur(p=1.0), `global_transfo2`는 blur(p=0.1)에 Solarization(p=0.2) 추가, local은 96x96에 blur(p=0.5)다. BYOL 계열의 비대칭 증강을 그대로 따랐다."
+    },
+    {
+      "id": "491b1677-ac1e-4547-9cfc-d5ef1fd8b602",
+      "question": "DINO의 학습률 선형 스케일링 공식은?",
+      "answer": "`lr * (batch_size_per_gpu * world_size) / 256`이다. 배치 크기나 GPU 수를 바꿔도 유효 학습률이 유지되도록 자동 보정한다."
+    },
+    {
+      "id": "bf8b6b44-4ad1-46f1-8280-d505f5f3a5d7",
+      "question": "`eval_knn.py`의 분산 특징 수집은 어떻게 순서를 보장하는가?",
+      "answer": "`ReturnIndexDataset`이 `(img, index)`를 반환하고, 각 rank가 `all_gather`한 특징을 원본 인덱스 위치에 `index_copy_`한다. `DistributedSampler(shuffle=False)`와 결합해 원래 순서가 정확히 복원된다."
+    },
+    {
+      "id": "defc9bfe-8816-4656-a350-1a52f984a49a",
+      "question": "`eval_knn.py`에서 val 이미지가 100장 미만이면 어떤 오류가 나는가?",
+      "answer": "`imgs_per_chunk = num_test_images // 100`이 0이 되어 `ValueError: range() arg 3 must not be zero`가 발생한다. 실측으로 확인된 함정이다."
+    },
+    {
+      "id": "ba4773e5-9c4e-4d86-99ed-72cb8e80db19",
+      "question": "`knn_classifier`의 `num_classes` 관련 문제와 그 영향은?",
+      "answer": "호출부에서 인자를 전달하지 않아 항상 기본값 1000이 쓰인다. `(k, 1000)` 버퍼를 잡으므로 낭비지만 `scatter_` 인덱스는 실제 레이블 범위 안이라 결과 자체는 정확하다."
+    },
+    {
+      "id": "9cc05a23-05b4-476d-882b-4f3af1b303e4",
+      "question": "`eval_linear.py`에서 ViT-S와 ViT-B의 특징 구성 차이는?",
+      "answer": "ViT-S는 `--n_last_blocks 4`로 마지막 4개 블록의 CLS를 concat해 1536차원(384x4)을 만든다. ViT-B는 `n_last_blocks 1`에 `--avgpool_patchtokens`로 패치 토큰 평균을 추가 concat한다."
+    },
+    {
+      "id": "0e184c83-6abc-4dd2-88f5-af4d9fdfbb27",
+      "question": "`eval_linear.py`의 옵티마이저 설정은?",
+      "answer": "`SGD(lr * batch*world/256, momentum=0.9, weight_decay=0)`에 cosine annealing을 쓴다. weight decay를 적용하지 않는 것이 linear probe 관례다."
+    },
+    {
+      "id": "147335ca-e7f9-42d1-b4c4-9020e3ae7d17",
+      "question": "`eval_linear.py`에서 백본이 절대 갱신되지 않는 것을 어떻게 보장하는가?",
+      "answer": "백본 forward를 `torch.no_grad()` 블록 안에서만 호출하기 때문이다. 옵티마이저에도 `linear_classifier.parameters()`만 전달한다."
+    },
+    {
+      "id": "c74a54b0-47c7-4416-a44a-dca94fe94e37",
+      "question": "`eval_linear.py` 실행 시 `FileNotFoundError`가 나는 조건과 해결법은?",
+      "answer": "`output_dir`을 만들지 않고 `log.txt`를 열기 때문에, 디렉터리가 없으면 첫 epoch 검증 직후 죽는다. 실행 전에 `mkdir -p`로 미리 만들어야 한다."
+    },
+    {
+      "id": "c4ed0c46-f18c-47df-b282-b59a9fbb5cba",
+      "question": "DAVIS 비디오 객체 분할 평가는 어떤 방식으로 동작하는가?",
+      "answer": "학습 없이 첫 프레임 마스크를 어텐션 특징 유사도로 전파하는 semi-supervised 방식이다. `label_propagation` 함수가 핵심 로직을 담당한다."
+    },
+    {
+      "id": "5ec6e000-f59f-4297-bfaa-b25543b6bebe",
+      "question": "`label_propagation`의 affinity 계산식과 후처리는?",
+      "answer": "`exp(feat_tar @ feat_src / 0.1)`로 affinity를 구한다. `restrict_neighborhood`로 공간적으로 먼 대응을 마스킹하고 top-k만 남긴 뒤 정규화한다."
+    },
+    {
+      "id": "db91cb61-84a3-42a3-ad4a-bd9ee49acf6e",
+      "question": "DAVIS 평가에서 컨텍스트 프레임은 어떻게 관리되는가?",
+      "answer": "큐(`queue`) 자료구조로 최근 N개 프레임을 컨텍스트로 유지한다. 이 프레임들의 세그멘테이션을 affinity로 가중 합성해 타깃 마스크를 만든다."
+    }
+  ]
+}

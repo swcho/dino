@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "34ab3896-0e5d-446b-b91a-3e17be402ac7",
+      "question": "`--pretrained_weights` 지정 여부에 따라 로딩 방식이 어떻게 갈리는가?",
+      "answer": "지정하면 `torch.load` 후 `module.`·`backbone.` prefix를 제거하고 `strict=False`로 로드한다. 미지정이면 `dl.fbaipublicfiles.com`에서 공식 가중치를 받아 `strict=True`로 로드한다."
+    },
+    {
+      "id": "f376f0db-d421-41b0-9083-e116c1feb7aa",
+      "question": "어텐션 시각화에서 입력 이미지를 patch_size 배수로 잘라내는 이유는?",
+      "answer": "패치 임베딩이 `patch_size` 단위로 나뉘어야 하기 때문이다. `visualize_attention.py`는 `w - w % patch_size` 방식으로 명시적으로 crop한다."
+    },
+    {
+      "id": "542a9a73-ad2e-41ef-b1bf-f43890f30299",
+      "question": "`get_last_selfattention`의 반환값에서 시각화에 쓰는 슬라이스와 그 의미는?",
+      "answer": "`attn[0, :, 0, 1:]`을 쓴다. CLS 토큰(인덱스 0)이 각 패치 토큰(인덱스 1부터)을 얼마나 보는지를 헤드별로 뽑은 것이다."
+    },
+    {
+      "id": "a44f249f-17e3-49c8-bc6f-50506060168f",
+      "question": "어텐션 시각화의 `--threshold` 옵션은 무엇을 하는가?",
+      "answer": "어텐션 값을 정렬한 뒤 누적합으로 상위 xx% mass만 남긴 이진 마스크를 만든다. 그 마스크에 `find_contours`와 Polygon 오버레이를 적용해 객체 윤곽을 그린다."
+    },
+    {
+      "id": "9b23adca-3df3-45bd-b93c-127145ba3a6e",
+      "question": "`utils.py`가 이 프로젝트에서 갖는 성격은?",
+      "answer": "분산 부트스트랩, 로깅, 스케줄링, multi-crop 래핑, 가중치 로딩을 한 파일에 모아둔 잡화점이다. 829 LOC로 저장소 최대 모듈이다."
+    },
+    {
+      "id": "7be2f705-2ab3-4f6b-8be9-4b7076725e99",
+      "question": "`MetricLogger`와 `SmoothedValue`는 무엇을 제공하는가?",
+      "answer": "ETA, median, global_avg를 지원하는 학습 로거이며 프로세스 간 동기화 기능도 포함한다. stdout에 max mem과 data time도 함께 출력한다."
+    },
+    {
+      "id": "07cf1168-b48b-4d31-9730-ba7716f27b15",
+      "question": "`restart_from_checkpoint`의 설계가 좋은 이유는?",
+      "answer": "`**kwargs`로 복원 대상을 호출자가 이름으로 선언하기 때문이다. `fp16_scaler` 같은 항목이 나중에 추가돼도 함수 자체는 수정할 필요가 없다."
+    },
+    {
+      "id": "58afb46a-3bb8-42a3-8a3f-353a42c0610f",
+      "question": "`utils.PCA`는 어디에 쓰이는가?",
+      "answer": "이미지 검색과 복제 탐지에서 whitening 연산에 쓰인다. `train_pca`로 학습하고 `apply`로 적용하며, Copydays 평가에서는 YFCC100M 이미지로 학습시킨다."
+    },
+    {
+      "id": "9ca39093-630c-412d-836a-3e2c02ed88bb",
+      "question": "`compute_ap` / `compute_map`은 무엇을 위한 함수인가?",
+      "answer": "이미지 검색 평가 지표를 계산한다. revisitop 벤치마크와 호환되도록 구현돼 rOxford/rParis의 Medium/Hard mAP를 산출한다."
+    },
+    {
+      "id": "3e5efbb8-bbb2-4ba9-9663-1ebccb4efdb8",
+      "question": "`utils.multi_scale`은 어떻게 동작하는가?",
+      "answer": "1, 1/√2, 1/2 세 가지 스케일로 입력을 리사이즈해 각각 특징을 뽑고 합산한 뒤 정규화한다. 검색 평가에서 `--multiscale` 옵션으로 활성화된다."
+    },
+    {
+      "id": "13805943-0540-4feb-ac4a-cab6ca1bf33e",
+      "question": "`MultiCropWrapper.forward`가 forward 횟수를 줄이는 원리를 설명하라.",
+      "answer": "`torch.unique_consecutive(..., return_counts=True)`로 연속 동일 해상도 구간의 경계를 구하고, 그 구간만 `torch.cat`해 한 번에 백본에 넣는다. crop 개수(2+N)가 아니라 해상도 종류 수(보통 2)만큼만 forward가 돈다."
+    },
+    {
+      "id": "3e3c4506-d356-47d3-a704-2818dd4eb497",
+      "question": "`MultiCropWrapper`가 head는 몇 번 통과시키는가?",
+      "answer": "한 번이다. 해상도별 백본 출력을 전부 이어붙인 뒤 concat된 특징에 head를 단 한 번 적용한다."
+    },
+    {
+      "id": "2d81960a-8864-44ad-9362-2683aeff2985",
+      "question": "`cosine_scheduler`가 스케줄을 배열로 미리 만드는 이점은?",
+      "answer": "스케줄 상태를 옵티마이저에 두지 않으므로 resume 시 상태 동기화 문제가 사라진다. `schedule[it]`로 조회만 하면 되므로 재개가 자동으로 정확해진다."
+    },
+    {
+      "id": "05ef7543-9551-43fb-a8c2-fdd4c8da70ce",
+      "question": "`cosine_scheduler`에서 `warmup_epochs > epochs`이면 어떤 일이 벌어지는가?",
+      "answer": "`np.arange(epochs * niter_per_ep - warmup_iters)`가 음수 길이가 되어 빈 배열이 만들어진다. 결과적으로 `assert len(schedule) == epochs * niter_per_ep`에서 AssertionError로 죽는다."
+    },
+    {
+      "id": "4ef288b3-fd2f-449c-ac61-26d126213f19",
+      "question": "`vision_transformer.py`의 책임 두 가지는?",
+      "answer": "timm 계보의 표준 ViT를 외부 의존성 없이 자급자족 구현하는 것과, DINO 전용 projection head(`DINOHead`)를 정의하는 것이다."
+    },
+    {
+      "id": "3c5e12b1-8a9a-40da-afb7-5b2cd80e9160",
+      "question": "`vit_tiny`, `vit_small`, `vit_base`의 embed_dim과 head 수는?",
+      "answer": "embed_dim은 각각 192/384/768이고 attention head는 3/6/12개다. depth는 세 모델 모두 12로 동일하다."
+    },
+    {
+      "id": "c2837d0f-74ef-41eb-90a5-559addabccd7",
+      "question": "`interpolate_pos_encoding`이 필요한 이유는?",
+      "answer": "ViT의 위치 임베딩은 224x224 기준으로 학습되지만, 어텐션 시각화나 DAVIS 평가는 임의 해상도를 쓰기 때문이다. 패치 위치 임베딩을 2D로 reshape 후 bicubic 보간해 대응한다."
+    },
+    {
+      "id": "b7272a41-2dee-4aa8-a55f-76e8da597c7d",
+      "question": "`interpolate_pos_encoding`에서 CLS 토큰은 어떻게 처리되는가?",
+      "answer": "CLS 토큰의 위치 임베딩은 분리해 두고 보간하지 않는다. 패치 위치 임베딩만 보간한 뒤 마지막에 다시 concat한다."
+    },
+    {
+      "id": "08017a87-f2dc-4e53-ab9d-4248ef42289b",
+      "question": "`w0, h0 = w0 + 0.1, h0 + 0.1`이라는 코드는 왜 있는가?",
+      "answer": "bicubic 보간에서 부동소수점 오차로 출력 크기가 1만큼 어긋나는 것을 막는 실전 대응이다. 코드에 관련 GitHub 이슈 링크 주석이 달려 있다."
+    }
+  ]
+}

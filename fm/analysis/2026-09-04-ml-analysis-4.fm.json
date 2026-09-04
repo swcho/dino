@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "d3cf042b-f21e-404a-ad51-b0c7e3c75333",
+      "question": "DINO가 lr/wd/momentum 스케줄을 다루는 독특한 방식은?",
+      "answer": "`cosine_scheduler`가 학습 시작 전에 전체 iteration 길이의 numpy 배열을 통째로 생성하고 `schedule[it]`로 조회한다. 스케줄러에 상태가 없어 resume이 자동으로 정확해진다."
+    },
+    {
+      "id": "20b77b15-0521-43ee-844b-7bf862f62502",
+      "question": "`cosine_scheduler`에서 `--warmup_epochs`가 `--epochs`보다 크면 어떻게 되는가?",
+      "answer": "`np.arange`가 음수 길이가 되어 `assert len(schedule) == epochs * niter_per_ep`에서 AssertionError로 죽는다. 짧은 실험에서는 `--warmup_epochs 0`을 줘야 한다."
+    },
+    {
+      "id": "293ef49d-9292-49c2-882c-9728f32b3c02",
+      "question": "`DINOLoss.forward`에서 teacher와 student는 각각 몇 개의 view를 처리하는가?",
+      "answer": "teacher는 global crop 2개만(`chunk(2)`), student는 전체 `2 + N`개를 처리한다. 이 비대칭이 local-to-global 학습 신호를 만든다."
+    },
+    {
+      "id": "cb5c93c7-ec2e-4610-ba80-ab7fe10d9140",
+      "question": "`DINOLoss`의 이중 루프에서 `if v == iq: continue`가 하는 일과 그 이유는?",
+      "answer": "teacher와 student가 같은 view를 볼 때의 쌍을 건너뛴다. 같은 crop끼리 비교하면 학습 신호가 없기 때문에 서로 다른 view끼리만 맞추게 한다."
+    },
+    {
+      "id": "ca1872e9-f57e-42f9-beab-614384832695",
+      "question": "local crop이 8개일 때 DINO 손실의 총 항 수는 몇 개인가?",
+      "answer": "`2 x (2+8) - 2 = 18`개다. teacher view 2개 x student view 10개에서 같은 view 쌍 2개를 뺀 값이다."
+    },
+    {
+      "id": "c475e18f-69cb-4fda-be8c-8a089f8977ba",
+      "question": "DINO의 student_temp와 teacher_temp 기본값은 각각 얼마이며 왜 다른가?",
+      "answer": "student_temp는 0.1 고정, teacher_temp는 0.04다. teacher가 더 낮아야 분포가 뾰족해져(sharpening) 학습 신호가 생긴다."
+    },
+    {
+      "id": "c4ca4326-c375-49f3-8a8d-f9baaa899c78",
+      "question": "DINO의 centering은 구체적으로 어떻게 구현되는가?",
+      "answer": "teacher 로짓에서 `self.center`를 뺀 뒤 softmax한다. `update_center`가 배치 평균을 `dist.all_reduce`로 모아 momentum 0.9의 EMA로 갱신한다."
+    },
+    {
+      "id": "ad69d097-78a4-4c14-b45d-849fe686c424",
+      "question": "centering과 sharpening은 각각 어느 방향으로 분포를 밀며 왜 둘 다 필요한가?",
+      "answer": "centering은 uniform 쪽으로, sharpening은 one-hot 쪽으로 민다. 서로 반대 방향으로 밀어 균형을 만들며, 하나만 있으면 표현이 붕괴한다."
+    },
+    {
+      "id": "cb239d6c-d8a3-4bb5-9dda-403ca838094f",
+      "question": "DINO의 붕괴 방지 3중 장치는 무엇인가?",
+      "answer": "centering(배치 평균 제거), sharpening(teacher temperature를 student보다 낮게), freeze_last_layer(초기 1 epoch 동안 head 마지막 층 gradient 차단)다."
+    },
+    {
+      "id": "e277102d-22d5-455b-875a-584fd2e3614b",
+      "question": "`update_center`가 `dist.all_reduce`를 쓰기 때문에 생기는 제약은?",
+      "answer": "프로세스 그룹 초기화가 필수다. 단일 GPU 폴백이 그룹을 만들어 주므로 동작하지만, 그룹 없이 `DINOLoss`만 단독으로 쓰면 예외가 발생한다."
+    },
+    {
+      "id": "89e9c6ce-5256-4a92-8565-1abcc19f8238",
+      "question": "DINO의 EMA(momentum) 갱신식과 momentum 스케줄은?",
+      "answer": "`param_k.mul_(m).add_((1-m) * param_q)`이며, m은 0.996에서 1.0으로 cosine 증가한다. 학습이 진행될수록 teacher가 천천히 변한다."
+    },
+    {
+      "id": "44d374cd-3892-48f8-b31a-a852081c3252",
+      "question": "배치 크기가 256 이하로 작을 때 `--momentum_teacher`는 어떻게 조정하는 것이 권장되는가?",
+      "answer": "`0.9995` 같은 더 높은 값이 권장된다. argparse help 문자열에 이 운영 지침이 직접 적혀 있다."
+    },
+    {
+      "id": "fc2fd9f4-9a38-484a-aa31-67c8563209df",
+      "question": "DINO의 gradient clipping이 표준 `clip_grad_norm_`과 다른 점은?",
+      "answer": "전체 파라미터의 글로벌 노름이 아니라 파라미터 텐서마다 개별적으로 노름을 재고 클리핑한다. 기본값은 `--clip_grad 3.0`이며 0이면 비활성이다."
+    },
+    {
+      "id": "630c3cf9-5c68-4691-8277-de18cdccdb15",
+      "question": "DINO 학습 루프의 NaN 가드는 어떻게 동작하는가?",
+      "answer": "`math.isfinite(loss.item())`이 실패하면 메시지를 출력하고 `sys.exit(1)`로 즉시 종료한다. 며칠짜리 학습에서 NaN이 조용히 전파되는 것을 막는 값싼 방어책이다."
+    },
+    {
+      "id": "33bdc6db-b833-4243-8606-66ddb2433d73",
+      "question": "DINO는 gradient accumulation을 지원하는가?",
+      "answer": "지원하지 않는다. 유효 배치는 `batch_size_per_gpu x world_size`로만 조절하며, linear scaling rule이 이를 자동 보정한다."
+    },
+    {
+      "id": "6269b1d3-1444-4207-95d4-55d80a7ed83b",
+      "question": "`init_distributed_mode`의 3단계 폴백은 무엇인가?",
+      "answer": "① `RANK`/`WORLD_SIZE` 환경변수 → ② `SLURM_PROCID` → ③ 단일 GPU 자동 폴백(`127.0.0.1:29500`) 순이다. ③ 덕분에 `torchrun` 없이 `python main_dino.py`가 그대로 돈다."
+    },
+    {
+      "id": "f942e772-287b-4a28-9026-8c52cc627ac2",
+      "question": "DINO에서 SyncBatchNorm은 언제 적용되는가?",
+      "answer": "`has_batchnorms(student)`가 True일 때만 변환한다. ViT는 BN이 없어 미적용이고 ResNet 계열에서만 적용된다."
+    },
+    {
+      "id": "fb5d5720-2a45-4d2d-8a92-1a959510a018",
+      "question": "teacher를 DDP로 감싸는 조건은 무엇인가?",
+      "answer": "BatchNorm이 있을 때만 SyncBN 동작을 위해 DDP로 감싼다. ViT처럼 BN이 없으면 감싸지 않고 `teacher_without_ddp = teacher`가 된다."
+    },
+    {
+      "id": "def74f32-e590-4848-9f34-e5682b232ef8",
+      "question": "DINO의 멀티 노드 학습은 어떻게 실행하는가?",
+      "answer": "`run_with_submitit.py`로 Slurm에 제출한다. `file://` dist_url로 노드 간 rendezvous를 맞추고, preemption 시 `DelayedSubmission`으로 자동 재제출된다."
+    }
+  ]
+}
