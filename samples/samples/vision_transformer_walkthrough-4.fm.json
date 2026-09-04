@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "546aeaa3-631e-44b9-9300-fda842fa6a04",
+      "question": "ViT-Tiny/16의 파라미터는 어디에 몰려 있는가?",
+      "answer": "전체 5,524,416개 중 blocks가 5,338,368개(96.6%)다. patch_embed 147,648(2.7%), cls_token+pos_embed 38,016(0.7%), norm 384(0.0%)로 나머지는 미미하다."
+    },
+    {
+      "id": "c5b37aa4-4303-4eb7-9626-0b8dfaceed4c",
+      "question": "ViT-S/16과 ViT-S/8의 파라미터 차이는?",
+      "answer": "둘 다 21.67M으로 같고 `pos_embed`만 (1,197,384) vs (1,785,384)로 다르다. 파라미터는 거의 같지만 연산량은 16배 차이가 난다."
+    },
+    {
+      "id": "7c90e8d6-7de6-4b0b-a56f-ae61290cb6f1",
+      "question": "DINO 백본에 분류기가 없는 이유는?",
+      "answer": "`num_classes=0` 기본값 때문에 `self.head = nn.Identity()` 가 되기 때문이다. 추가로 `MultiCropWrapper`가 `backbone.fc, backbone.head = nn.Identity(), nn.Identity()` 로 한 번 더 덮는다."
+    },
+    {
+      "id": "76397a5f-30ab-4f0f-aa4b-939991536356",
+      "question": "`VisionTransformer`의 `img_size` 기본값에서 주의할 점은?",
+      "answer": "`img_size=[224]` 로 **리스트**다. 내부에서 `img_size[0]` 으로 꺼내 쓰므로 정수를 넘기면 깨진다."
+    },
+    {
+      "id": "26b5c101-1c4f-4e94-9e37-8421726a420f",
+      "question": "`qkv_bias`의 클래스 기본값과 팩토리 값이 다른 점은?",
+      "answer": "`VisionTransformer` 클래스 기본값은 `False`지만 `vit_*` 팩토리가 `True`를 준다. 클래스를 직접 인스턴스화하면 bias 없는 모델이 나온다."
+    },
+    {
+      "id": "e4a84e5e-bf25-4a1c-b211-0dcecbb34f38",
+      "question": "`VisionTransformer._init_weights`는 무엇을 초기화하는가?",
+      "answer": "`nn.Linear`는 weight를 `trunc_normal_(std=.02)`, bias를 0으로 하고, `nn.LayerNorm`은 weight 1 / bias 0으로 한다. `cls_token`과 `pos_embed`도 따로 `trunc_normal_(std=.02)`로 초기화한다."
+    },
+    {
+      "id": "d588f0ba-9a09-45e1-91c1-e37bd34344f0",
+      "question": "`_init_weights`가 `PatchEmbed`의 Conv2d를 초기화하지 않는 이유는?",
+      "answer": "분기가 `nn.Linear`와 `nn.LayerNorm`만 검사하므로 `nn.Conv2d`는 걸리지 않는다. 실측하면 weight std가 0.0208(0.02 아님)이고 bias도 0이 아니어서 PyTorch 기본 Kaiming uniform 초기화가 그대로 남는다."
+    },
+    {
+      "id": "d2955717-42ac-439a-8552-50382b958a52",
+      "question": "`trunc_normal_(tensor, mean=0., std=1., a=-2., b=2.)`의 $a, b$는 무엇인가?",
+      "answer": "$\\sigma$ 단위가 아니라 **절대값 경계**다. 내부에서 `l = norm_cdf((a - mean) / std)` 로 계산하므로 std에 따라 몇 $\\sigma$ 에 해당하는지가 달라진다."
+    },
+    {
+      "id": "5438636d-83a5-40ec-9292-8f58c7eb4a5c",
+      "question": "`trunc_normal_(std=.02)`에서 절단이 일어나지 않는 이유는?",
+      "answer": "`a=-2, b=2` 가 절대 경계라 $\\pm100\\sigma$ 에 놓여 사실상 잘리지 않는다. 실측 max|w|가 0.0886(4.43σ)로 $2\\sigma$ 를 훌쩍 넘는다."
+    },
+    {
+      "id": "20aaf23c-2b28-45ea-ac82-45bffff3d163",
+      "question": "`trunc_normal_`이 실제로 절단하는 것은 언제인가?",
+      "answer": "`std=1.0` 처럼 std가 경계와 비슷한 규모일 때다. 실측하면 std 0.8798, max|w| 2.0000(2.00σ)로 정확히 $\\pm2$ 에서 잘린다."
+    },
+    {
+      "id": "bff62192-773c-41ec-ab28-30c459ea9796",
+      "question": "`VisionTransformer`의 세 가지 forward 경로와 각각의 용도는?",
+      "answer": "`forward`는 $(B,D)$ CLS로 학습·k-NN·검색용, `get_last_selfattention`은 $(B,\\text{heads},N,N)$ 로 어텐션 시각화용, `get_intermediate_layers(x,n)`은 $n\\times(B,N,D)$ 로 linear probe용이다."
+    },
+    {
+      "id": "fd653974-5fb8-46a1-acd8-2b3584504bb6",
+      "question": "`get_last_selfattention`은 마지막 블록을 어떻게 처리하는가?",
+      "answer": "마지막 블록만 `blk(x, return_attention=True)` 로 호출해 어텐션 행렬을 반환한다. 마지막 블록의 **출력은 계산되지 않는다**."
+    },
+    {
+      "id": "ea1fe970-647e-4d23-878e-19011b763430",
+      "question": "`get_intermediate_layers`가 각 중간 출력에 하는 처리는?",
+      "answer": "`if len(self.blocks) - i <= n: output.append(self.norm(x))` 로 마지막 $n$개 블록의 출력에 각각 **마지막 `self.norm`을 적용**해 모은다."
+    },
+    {
+      "id": "dad210a2-c6d7-49c4-89ea-636b17676323",
+      "question": "`eval_linear.py`의 linear probe 특징은 어떻게 구성되는가?",
+      "answer": "$\\text{feature} = [\\mathrm{CLS}^{(L-n+1)} \\Vert \\cdots \\Vert \\mathrm{CLS}^{(L)}] \\in \\mathbb{R}^{D\\cdot n}$ 로 마지막 $n$개 블록의 CLS를 concat한다. ViT-S, $n=4$ 면 1536차원이다."
+    },
+    {
+      "id": "a6f1119a-24fb-4fd9-9b0d-533527629019",
+      "question": "`get_intermediate_layers`의 마지막 원소와 `forward` 출력의 관계는?",
+      "answer": "`inter[-1][:, 0]` 이 `forward(x)` 와 정확히 일치한다(오차 0). 둘 다 마지막 블록 출력에 `self.norm`을 적용한 뒤 CLS를 취하기 때문이다."
+    },
+    {
+      "id": "87c5379a-bf81-498e-b024-1ad332416f6f",
+      "question": "어텐션 시각화의 출발점인 CLS 어텐션 행은 어떻게 꺼내는가?",
+      "answer": "`a[:, :, 0, 1:]` 로 CLS 행에서 CLS 자신을 제외한 패치 부분만 취한다. CLS→CLS 성분을 뺐으므로 행 합이 1보다 약간 작다(실측 약 0.995)."
+    },
+    {
+      "id": "7c2dfec8-fbdf-4888-a52e-93860dbd31f8",
+      "question": "CLS 어텐션 히트맵은 어떻게 만드는가?",
+      "answer": "$a^{(h)} = A^{(h)}[0, 1:] \\in \\mathbb{R}^P$ 를 $\\sqrt{P}\\times\\sqrt{P}$ 로 reshape한 뒤 patch_size 배로 업샘플한다. 224px/patch16이면 $14\\times14 \\to 224\\times224$ 다."
+    },
+    {
+      "id": "fe2eb896-8412-45b6-af84-6b0c2bcdd32c",
+      "question": "CLS 어텐션의 집중도를 정량화하는 지표는?",
+      "answer": "정규화한 어텐션의 엔트로피 $H(a^{(h)}) = -\\sum_i \\hat{a}^{(h)}_i \\log \\hat{a}^{(h)}_i$ 다. 완전 균등이면 $\\log N$ 이고 낮을수록 특정 영역에 집중한다는 뜻이다."
+    }
+  ]
+}

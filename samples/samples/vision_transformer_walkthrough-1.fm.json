@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "9a13c584-ae6e-401b-97f5-009c24cfbc2b",
+      "question": "`vision_transformer.py`에 들어 있는 구성 요소는 무엇인가?",
+      "answer": "timm 의존 없이 ViT를 구현한 파일로, 클래스 7개(`DropPath`, `Mlp`, `Attention`, `Block`, `PatchEmbed`, `VisionTransformer`, `DINOHead`)와 팩토리 3개(`vit_tiny/small/base`), 그리고 `drop_path` 함수가 전부다."
+    },
+    {
+      "id": "bb724805-a0c8-4b4b-b2ad-330aebcb4852",
+      "question": "ViT에서 픽셀 하나를 토큰으로 쓰면 왜 안 되는가?",
+      "answer": "224×224 = 50176개 토큰이 되어 어텐션이 $O(N^2) \\approx 2.5\\times10^9$ 로 폭발한다. ViT는 $P\\times P$ 패치를 토큰 하나로 묶어 $N = (H/P)(W/P)$ 로 줄인다."
+    },
+    {
+      "id": "85b36143-8be6-4b34-a6ad-08685633e87d",
+      "question": "$P=16$, $224\\times224$ 입력에서 토큰 수는 몇 개인가?",
+      "answer": "패치는 $14\\times14 = 196$ 개이고, CLS 토큰을 더해 총 197개 토큰이 된다. $N = \\frac{H}{P}\\cdot\\frac{W}{P}$ 공식에서 나온다."
+    },
+    {
+      "id": "24ca9bad-f5a3-4b18-a306-fd5ebbd42bdd",
+      "question": "ViT에서 토큰끼리 정보를 주고받는 모듈은 무엇인가?",
+      "answer": "`Attention` 하나뿐이다. `PatchEmbed`, `Mlp`, `LayerNorm` 은 모두 토큰별로 똑같이 적용되는 연산이라 토큰을 섞지 않는다."
+    },
+    {
+      "id": "e8652560-1a53-4e4b-9a13-90a3f8caeb11",
+      "question": "ViT에서 유일한 '이미지 특화 설계'는 무엇인가?",
+      "answer": "이미지를 $P\\times P$ 패치 토큰으로 바꾸는 `PatchEmbed` 단계다. 그 이후는 전부 표준 트랜스포머와 동일하다."
+    },
+    {
+      "id": "8f147717-d0ec-4f87-95b4-dcbe3fcb5006",
+      "question": "`PatchEmbed`의 구현은 어떻게 되어 있는가?",
+      "answer": "`nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)` 하나이고, forward는 `self.proj(x).flatten(2).transpose(1, 2)` 다."
+    },
+    {
+      "id": "4f9472f7-0af3-48ff-8863-66c0fb5cb1f3",
+      "question": "논문의 '패치 flatten 후 선형 투영'을 수식으로 쓰면?",
+      "answer": "$z_p = W_e\\,\\mathrm{vec}(x_p) + b_e$ 이며, $x_p \\in \\mathbb{R}^{P\\times P\\times C}$, $W_e \\in \\mathbb{R}^{D \\times P^2C}$ 다."
+    },
+    {
+      "id": "43b355d4-af32-469f-b898-c159b09396dc",
+      "question": "kernel_size = stride = $P$ 인 Conv2d가 패치 선형 투영과 같은 이유는?",
+      "answer": "커널이 패치 경계에서 겹치지 않고 딱 맞아떨어지므로 각 출력 위치가 서로 겹치지 않는 패치 하나의 선형 변환이 된다. `F.unfold` + `Linear` 로 재현하면 오차 3e-06 수준으로 일치한다."
+    },
+    {
+      "id": "e8dee989-7164-434e-a0f3-1f3cf4e3f33d",
+      "question": "`PatchEmbed`의 shape 변화를 순서대로 쓰면?",
+      "answer": "$(B,3,224,224) \\xrightarrow{\\text{Conv}} (B,D,14,14) \\xrightarrow{\\text{flatten(2)}} (B,D,196) \\xrightarrow{\\text{transpose}} (B,196,D)$ 다."
+    },
+    {
+      "id": "de7d36ec-4eaa-4262-ad56-0c80228274fd",
+      "question": "ViT-Tiny/16의 `PatchEmbed` 파라미터 수는?",
+      "answer": "147,648개다. $D \\times 3 \\times P \\times P + D = 192\\times3\\times16\\times16 + 192$ 로 계산된다."
+    },
+    {
+      "id": "c98f6060-5f16-42d4-9015-9122e3c37708",
+      "question": "같은 `patch_size`에서 입력 해상도를 바꾸면 파라미터 수는 어떻게 되는가?",
+      "answer": "변하지 않는다. Conv 커널이 모든 패치에서 공유되므로 해상도와 무관하며, 토큰 수(따라서 연산량)만 달라진다."
+    },
+    {
+      "id": "8cc127cb-842b-4f85-8993-24464edd881f",
+      "question": "`prepare_tokens`가 하는 세 가지 일은?",
+      "answer": "① `patch_embed`로 패치 토큰 만들기, ② `cls_token.expand`로 CLS를 앞에 concat, ③ `interpolate_pos_encoding` 결과를 더해 위치 정보를 주입하는 것이다."
+    },
+    {
+      "id": "68159f53-d1fa-4c58-8c7e-bb051cc2e4f6",
+      "question": "`cls_token`은 어떻게 정의되고 어떤 역할인가?",
+      "answer": "`nn.Parameter(torch.zeros(1, 1, embed_dim))` 로 학습되는 벡터 하나다. 이미지 정보가 전혀 없고 어텐션으로 패치들로부터 정보를 모으는 '읽기 전용 슬롯' 역할을 하며, 최종 출력은 `x[:, 0]` 이다."
+    },
+    {
+      "id": "bd1e6efc-96d6-4851-b2cd-624bbff5e113",
+      "question": "`cls_token.expand(B,-1,-1)`와 `repeat`의 차이는?",
+      "answer": "`expand`는 메모리를 복사하지 않고 stride 0으로 브로드캐스트만 한다. 실제로 `stride()`를 찍으면 0번 축이 0으로 나온다."
+    },
+    {
+      "id": "3bb60d39-0924-45ee-b0ee-394cacbd2bcc",
+      "question": "어텐션의 순열 등변(permutation equivariant)성이란?",
+      "answer": "$\\mathrm{Attn}(\\Pi Z) = \\Pi\\,\\mathrm{Attn}(Z)$ 가 임의 순열 $\\Pi$ 에 대해 성립한다는 뜻이다. 토큰 순서가 바뀌어도 출력이 같은 순서로 따라 바뀔 뿐, 몇 번째 토큰인지는 전혀 모른다."
+    },
+    {
+      "id": "c25d68c6-0b5d-470f-89de-516a86ea5b47",
+      "question": "위치 임베딩이 필요하다는 것을 어떻게 실험으로 확인했는가?",
+      "answer": "pos_embed 없이 패치를 섞으면 CLS 출력 차이가 8.3e-07(구분 못 함)이고, pos_embed를 더한 뒤 섞으면 3.5e-03(구분함)으로 나온다. 위치 정보는 반드시 입력에 더해서 넣어야 한다."
+    },
+    {
+      "id": "6935815d-b21e-4365-9f5e-eeda65911d0e",
+      "question": "위치 임베딩은 어떤 형태로 주입되는가?",
+      "answer": "$z_i \\leftarrow z_i + p_i$ 로 각 토큰에 더한다. $p \\in \\mathbb{R}^{(N+1)\\times D}$ 이며 학습되는 파라미터다."
+    },
+    {
+      "id": "1b49e1df-75d0-455f-857c-39d1ff476a71",
+      "question": "`interpolate_pos_encoding`은 왜 필요한가?",
+      "answer": "`pos_embed`는 224px($14\\times14$ 격자)에 맞춰 학습되지만 DINO는 96px local crop과 480px 시각화도 같은 백본에 넣기 때문이다. 격자가 다르면 bicubic 보간으로 크기를 맞춘다."
+    },
+    {
+      "id": "d9eefb57-fdcb-4835-8f51-a7c9ffbc22d8",
+      "question": "`interpolate_pos_encoding`에서 CLS의 위치 임베딩은 어떻게 처리되는가?",
+      "answer": "$p_0$ 는 격자에 속하지 않으므로 보간에서 제외하고 그대로 붙인다. 패치 부분 $p_{1:N}$ 만 $h_0\\times w_0$ 로 bicubic 보간한다."
+    }
+  ]
+}

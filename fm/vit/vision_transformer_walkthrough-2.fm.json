@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "bcc123b5-4605-4929-808f-a06d0f191cdd",
+      "question": "`w0, h0 = w0 + 0.1, h0 + 0.1` 이라는 코드의 의도는?",
+      "answer": "`scale_factor` 방식 보간에서 부동소수 오차로 출력 크기가 1 작아지는 것을 막는 방어 코드다(dino issue #8). 바로 다음 줄의 `assert int(w0) == patch_pos_embed.shape[-2]` 가 결과를 검증한다."
+    },
+    {
+      "id": "20132d23-c2e7-4ed0-955e-5aba9e1c0e19",
+      "question": "`interpolate_pos_encoding`의 빠른 경로(fast path)는 언제 동작하는가?",
+      "answer": "`npatch == N and w == h` 일 때 보간을 건너뛰고 `self.pos_embed` 를 그대로 반환한다. 224px 정사각 입력이 이 경우다."
+    },
+    {
+      "id": "d5542c81-435a-4dbe-9f01-bb0c36780c1f",
+      "question": "96px local crop을 ViT-S/16에 넣으면 토큰이 몇 개인가?",
+      "answer": "37개다. 패치 $(96/16)^2 = 36$ 개 + CLS 1개이며, pos_embed가 bicubic 보간으로 자동 대응한다."
+    },
+    {
+      "id": "4cc75ff4-5057-4eea-bf0e-fd3e0d6eab11",
+      "question": "480px 입력을 patch16 백본에 넣으면 토큰 수는?",
+      "answer": "901개다. $30\\times30 = 900$ 패치 + CLS 1개이며 bicubic 보간이 적용된다."
+    },
+    {
+      "id": "536c9593-2e03-4338-9663-8036c356cbcf",
+      "question": "ViT는 비정사각 입력도 처리할 수 있는가?",
+      "answer": "가능하다. 96×224 입력은 $(96/16)\\times(224/16) = 84$ 패치 + CLS = 85 토큰이 되며, `interpolate_pos_encoding`이 $w_0, h_0$ 를 따로 계산한다."
+    },
+    {
+      "id": "76d1d8ab-d277-4ea1-ac4e-ffa3a20de72a",
+      "question": "multi-head self-attention의 Q/K/V는 어떻게 정의되는가?",
+      "answer": "head $h$ 마다 $Q_h = ZW_h^Q$, $K_h = ZW_h^K$, $V_h = ZW_h^V$ 이고 $W_h^\\bullet \\in \\mathbb{R}^{D\\times d_h}$, $d_h = D/\\text{heads}$ 다."
+    },
+    {
+      "id": "23701728-d416-448f-871b-c628dea70607",
+      "question": "어텐션 행렬 $A_h$와 head 출력 $O_h$의 식은?",
+      "answer": "$A_h = \\mathrm{softmax}\\!\\left(\\frac{Q_hK_h^\\top}{\\sqrt{d_h}}\\right) \\in \\mathbb{R}^{N\\times N}$, $O_h = A_hV_h$ 다. $A_h$ 의 각 행은 합이 1인 확률분포다."
+    },
+    {
+      "id": "9a37d521-3cbd-4fd5-964d-f69566e1de26",
+      "question": "multi-head attention의 최종 출력은 어떻게 조합되는가?",
+      "answer": "$\\mathrm{MHSA}(Z) = [O_1 \\Vert \\cdots \\Vert O_{\\text{heads}}]\\,W^O$ 로, head 출력들을 concat한 뒤 projection 선형층 $W^O$ 를 통과시킨다."
+    },
+    {
+      "id": "69ea14e6-9fa7-46ce-901d-17e74ba25455",
+      "question": "어텐션에서 $\\sqrt{d_h}$ 로 나누는 이유는?",
+      "answer": "$q, k$ 성분이 독립이고 분산 1이면 $q^\\top k$ 의 분산이 $d_h$ 에 비례해 커진다. 스케일링 없이 softmax에 넣으면 분포가 one-hot으로 포화되어 gradient가 사라진다."
+    },
+    {
+      "id": "db265409-24b8-421e-a123-17f181e5552f",
+      "question": "스케일링 유무에 따른 어텐션 엔트로피 실측값은?",
+      "answer": "scale 없으면 로짓 std 2.658 / 엔트로피 2.844이고, $1/\\sqrt{64}$ 를 적용하면 로짓 std 0.332 / 엔트로피 5.229다(uniform 5.283). 스케일링이 포화를 막아준다."
+    },
+    {
+      "id": "268a053c-2688-484a-a84f-862239a81772",
+      "question": "DINO의 `Attention`은 Q/K/V를 어떻게 계산하는가?",
+      "answer": "`nn.Linear(dim, dim*3)` 하나로 한 번에 뽑아 GEMM 한 번으로 처리한다. `reshape` → `permute(2,0,3,1,4)` 로 $(3,B,\\text{heads},N,d_h)$ 를 만들어 q/k/v를 분리한다."
+    },
+    {
+      "id": "29b45cfe-9e60-4825-9df1-d1bc6da0863f",
+      "question": "ViT-Tiny의 `Attention` 파라미터 수는 어떻게 계산되는가?",
+      "answer": "148,224개로, $4 \\times (D\\times D) + 4\\times D = 4\\times192\\times192 + 4\\times192$ 다. qkv(3배)와 proj(1배)를 합쳐 $4D^2$ 이다."
+    },
+    {
+      "id": "fdb3f312-6073-4518-b416-4d829166dea3",
+      "question": "ViT-Tiny의 `head_dim`과 `scale` 값은?",
+      "answer": "`head_dim = 192/3 = 64`, `scale = head_dim ** -0.5 = 0.125` 다. DINO의 세 크기 모두 head_dim이 64로 고정돼 있다."
+    },
+    {
+      "id": "7233a2cf-de61-4210-adc1-b4eb02d93fa2",
+      "question": "DINO `Attention.forward`가 다른 ViT 구현과 다른 점은?",
+      "answer": "`return x, attn` 으로 **어텐션 맵을 항상 함께 반환**한다. 어텐션 시각화가 이 저장소의 핵심 산출물이라 일부러 남긴 설계다."
+    },
+    {
+      "id": "bdb5ad2b-2dd2-4dd5-9b3b-dcbc05d0feaf",
+      "question": "어텐션 맵을 항상 반환하는 설계의 대가는 무엇인가?",
+      "answer": "`F.scaled_dot_product_attention`(FlashAttention)을 쓸 수 없어 $(B, \\text{heads}, N, N)$ 행렬이 항상 메모리에 올라간다. patch 8 + 큰 이미지에서 OOM의 주범이다."
+    },
+    {
+      "id": "96f093b3-fd81-454c-8f71-c78aa9b0c2de",
+      "question": "ViT-S 기준 어텐션 행렬의 메모리 실측값은?",
+      "answer": "배치 1장 fp32 기준 ViT-S/16 224px은 0.9MB, ViT-S/8 224px은 14.1MB, ViT-S/8 480px은 296.8MB다. 배치 크기를 곱하면 그대로 늘어난다."
+    },
+    {
+      "id": "c687941b-3a45-4cd7-9c1e-23c2d21042ed",
+      "question": "`Mlp`의 구조와 수식은?",
+      "answer": "`fc1(D→4D)` → GELU → `fc2(4D→D)` 이며, $\\mathrm{Mlp}(z) = W_2\\,\\mathrm{GELU}(W_1z + b_1) + b_2$ 다. `mlp_ratio=4` 가 hidden 차원을 결정한다."
+    },
+    {
+      "id": "d18ae90b-9939-4843-afe7-6e65e42d56e1",
+      "question": "`Mlp`가 토큰을 섞지 않는다는 것을 어떻게 확인했는가?",
+      "answer": "5번 토큰만 값을 바꾸면 출력이 바뀐 토큰이 `[5]` 하나뿐이다. `nn.Linear`가 마지막 축에만 작용하므로 모든 토큰에 같은 MLP가 독립 적용된다."
+    },
+    {
+      "id": "d8286752-fecd-494d-829c-bc9055c728a7",
+      "question": "GELU와 ReLU의 차이는?",
+      "answer": "$\\mathrm{GELU}(x) = x\\,\\Phi(x)$ 로 매끄럽고 음수 구간을 완전히 죽이지 않는다. ReLU는 0에서 꺾이고 음수를 전부 0으로 만든다."
+    }
+  ]
+}

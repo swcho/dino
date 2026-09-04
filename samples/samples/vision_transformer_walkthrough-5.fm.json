@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "e7764197-2fc4-4d13-9b2b-450540f6a260",
+      "question": "랜덤 초기화와 DINO 사전학습 ViT-S/16의 CLS 어텐션 엔트로피 실측값은?",
+      "answer": "랜덤 초기화는 5.274로 $\\log N = 5.278$ 에 붙어 있고(거의 균등), DINO 사전학습은 4.263으로 확실히 낮다(집중)."
+    },
+    {
+      "id": "c881a1dd-e253-4de1-a1da-7341ce054c14",
+      "question": "DINO 사전학습 어텐션에서 관찰되는 'emerging properties'는?",
+      "answer": "헤드들이 서로 다른 영역에 집중해 어떤 헤드는 객체 전체, 어떤 헤드는 특정 부위를 잡는다. 레이블 없이 학습했는데 분할에 쓸 만한 마스크가 나오는 것이 논문의 핵심 주장이다."
+    },
+    {
+      "id": "bc2da5ac-20b0-4cb0-8d0c-35f23d05a1b0",
+      "question": "`utils.load_pretrained_weights`를 파일 경로 없이 부르면 어떻게 되는가?",
+      "answer": "`Please use the --pretrained_weights argument ...` 안내를 먼저 출력하고 나서 `https://dl.fbaipublicfiles.com/dino/` 의 공식 URL로 넘어간다. **에러가 아니라** 코드 흐름상 출력되는 메시지다."
+    },
+    {
+      "id": "a834861f-91d3-484a-900c-18d3f4f9dd44",
+      "question": "DINO 사전학습 가중치는 어디에 캐시되는가?",
+      "answer": "`~/.cache/torch/hub/checkpoints/` 다. ViT-S/16은 약 86MB이며 한 번 받으면 이후 오프라인에서도 재사용된다."
+    },
+    {
+      "id": "380eb922-d967-4c0e-a7a5-e96584962b6e",
+      "question": "`DINOHead`의 구조는?",
+      "answer": "`Linear(in_dim,2048)` → GELU → `Linear(2048,2048)` → GELU → `Linear(2048,256)` 의 3층 MLP 뒤에 L2 정규화, 그리고 `weight_norm(Linear(256, out_dim, bias=False))` 가 붙는다."
+    },
+    {
+      "id": "341d481e-b4fe-44fb-a682-7827f0a59f7d",
+      "question": "`weight_norm`은 가중치를 어떻게 분해하는가?",
+      "answer": "각 행을 $w_k = g_k \\dfrac{v_k}{\\lVert v_k \\rVert}$ 로 크기 $g_k$ 와 방향으로 나눈다. DINO는 $g_k = 1$ 로 채우고 `norm_last_layer=True` 면 학습에서 제외한다."
+    },
+    {
+      "id": "b82cc2e9-c235-467c-bf59-6edca3f251b8",
+      "question": "`DINOHead`의 출력 로짓이 코사인 유사도가 되는 유도는?",
+      "answer": "$g_k=1$ 이고 입력이 L2 정규화되어 $\\lVert\\tilde u\\rVert=1$ 이므로 $z_k = \\frac{v_k^\\top \\tilde u}{\\lVert v_k\\rVert} = \\cos\\angle(v_k, \\tilde u) \\in [-1,1]$ 다. 즉 $K$개 프로토타입 방향과의 코사인 유사도다."
+    },
+    {
+      "id": "c7a53e6d-be95-4f8b-8ad2-651cd7ff11a4",
+      "question": "로짓이 코사인 유사도임을 어떻게 수치로 확인했는가?",
+      "answer": "`F.normalize(head.last_layer.weight_v, dim=-1)` 와 정규화된 입력의 내적을 직접 계산해 로짓과 비교하면 오차 8.9e-08로 일치한다."
+    },
+    {
+      "id": "48b8eff6-a0d1-4fe0-9cce-e54457dbdce4",
+      "question": "로짓이 $[-1,1]$ 에 갇혀 있는 것이 붕괴 방지에 어떻게 기여하는가?",
+      "answer": "특정 프로토타입이 노름을 키워 로짓을 독식하는 경로를 원천 차단한다. centering·sharpening에 앞서는 '0번째 붕괴 방지 장치'다."
+    },
+    {
+      "id": "47117264-01ff-4453-970e-54fb0252734b",
+      "question": "`DINOHead`의 `bottleneck_dim`은 무엇이고 왜 중요한가?",
+      "answer": "기본값 256으로 MLP 마지막 출력 차원이며 L2 정규화가 걸리는 지점이다. 마지막 층이 $256\\times K$ 라서 $K$ 가 커질 때 파라미터를 결정한다."
+    },
+    {
+      "id": "07f48183-e8a3-4bb2-960c-0f9990f35f9a",
+      "question": "`out_dim`에 따른 `DINOHead` 파라미터 실측값은?",
+      "answer": "ViT-S(in_dim 384) 기준 `out_dim=4096`이면 mlp 5.51M + last_layer 1.05M = 6.56M, `out_dim=65536`이면 5.51M + 16.84M = 22.35M이다. 후자는 backbone 21.67M에 맞먹는다."
+    },
+    {
+      "id": "3abee419-c643-445a-8773-0f3bf5e4b964",
+      "question": "`norm_last_layer=False`로 두면 어떻게 되는가?",
+      "answer": "`weight_g.requires_grad`가 True가 되어 로짓 스케일이 풀린다. convnet처럼 큰 배치를 쓸 때만 풀라고 권고돼 있고 ViT에서는 불안정하다."
+    },
+    {
+      "id": "00e70c68-98ab-4d28-9935-4a32db4a0d9a",
+      "question": "`Attention.forward`가 튜플을 반환하는 것이 만드는 호환성 문제는?",
+      "answer": "`(x, attn)` 튜플이라 다른 ViT 구현과 달라 그대로 갈아끼우면 깨진다. `MultiCropWrapper`가 XCiT 때문에 `isinstance(_out, tuple)` 을 검사하는 것도 같은 맥락이다."
+    },
+    {
+      "id": "fa75cd76-54da-41f2-9d58-8fe077e818b1",
+      "question": "`patch_size`를 16에서 8로 줄이면 무엇이 달라지는가?",
+      "answer": "파라미터 수는 거의 그대로인데 토큰이 4배(196→784), 어텐션 행렬은 16배가 된다. 어텐션이 항상 materialize되므로 OOM의 주범이다."
+    },
+    {
+      "id": "1165ad58-76f0-4f15-b110-b4aea94ec201",
+      "question": "ViT 각 모듈의 파라미터 규모를 $D$로 표현하면?",
+      "answer": "`PatchEmbed` $D\\cdot P^2C + D$, CLS+pos $(N{+}2)D$, `Attention` $4D^2 + 4D$, `Mlp` $8D^2 + 5D$, `DropPath` 0이다. 블록 하나는 약 $12D^2$ 이다."
+    },
+    {
+      "id": "428d3df2-26fb-45ee-bc67-5cf63358073b",
+      "question": "`vision_transformer.py` 워크스루가 DINO 워크스루와 다른 준비 사항은?",
+      "answer": "프로세스 그룹 초기화가 필요 없다. `DINOLoss`를 쓰지 않으므로 `dist.all_reduce`가 등장하지 않기 때문이다."
+    },
+    {
+      "id": "68310e3d-9d9b-4fc2-a642-fcb892a2cc44",
+      "question": "ViT 조립 순서를 아래에서 위로 정리하면?",
+      "answer": "이미지 → `PatchEmbed` → CLS+pos_embed → `Block`×depth(Attention + Mlp + DropPath) → LayerNorm → `x[:,0]` → (DINO 학습 시) `DINOHead` 순이다."
+    },
+    {
+      "id": "32138a43-0d51-4ab1-abbc-a67f1fb674f3",
+      "question": "DINO에서 backbone과 head의 역할 분담은?",
+      "answer": "backbone $f_\\theta$ 는 CLS 토큰 $(B,D)$ 를 내고, head $h_\\theta$ 가 이를 $(B,K)$ 프로토타입 로짓으로 바꾼다. head는 학습이 끝나면 버려진다."
+    }
+  ]
+}

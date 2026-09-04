@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "e2c13b6e-709a-4aef-bd17-5fd174ea2347",
+      "question": "한 `Block` 안에서 Attention과 Mlp의 파라미터 비중은?",
+      "answer": "ViT-Tiny 기준 Attention 148,224(33.3%), Mlp 295,872(66.5%), LayerNorm 768(0.2%)이다. 어텐션 $4D^2$ vs MLP $8D^2$ 이므로 MLP가 약 2/3를 차지한다."
+    },
+    {
+      "id": "4b4015dd-1a0e-4b36-85f5-b4e8a54caa3b",
+      "question": "`drop_path` 함수의 마스크 shape이 `(B,1,1)`인 이유는?",
+      "answer": "`shape = (x.shape[0],) + (1,) * (x.ndim - 1)` 로 만들어 **샘플 단위**로 브로드캐스트하기 때문이다. 샘플 안에서 일부 원소만 꺼지는 일은 없고 잔차 경로 전체가 켜지거나 꺼진다."
+    },
+    {
+      "id": "50274704-bc70-412f-849c-294cc6b6bc4a",
+      "question": "DropPath와 Dropout의 차이는?",
+      "answer": "Dropout은 개별 **원소**를 끄지만 DropPath는 **샘플 하나의 잔차 경로 전체**를 끈다. 마스크가 0인 샘플은 그 블록에서 $x = x$, 즉 항등 함수가 된다."
+    },
+    {
+      "id": "c09767e5-5f12-4974-80a5-4321895b6946",
+      "question": "DropPath의 수식은?",
+      "answer": "$\\tilde{x}_i = \\frac{x_i}{1-p}\\cdot m_i$, $m_i \\sim \\mathrm{Bernoulli}(1-p)$ 다. $m_i = 0$ 인 샘플은 그 블록을 통째로 건너뛴다."
+    },
+    {
+      "id": "0c54dcfe-ed29-4502-8b11-f8a8a4c4825a",
+      "question": "DropPath에서 $1-p$ 로 나누는 이유는?",
+      "answer": "기대값을 보존해 학습/추론 사이 통계 차이를 없애기 위해서다(inverted dropout). $\\mathbb{E}[\\tilde{x}_i] = \\frac{x_i}{1-p}(1-p) = x_i$ 이므로 `eval()`에서는 보정 없이 `return x` 만 하면 된다."
+    },
+    {
+      "id": "fd0d3617-b04f-4053-a574-0cf47ba52069",
+      "question": "DropPath의 기대값 보존을 어떻게 수치로 확인했는가?",
+      "answer": "`drop_prob=0.5`로 10만 샘플에 적용하면 살아남은 비율 0.5034, 살아남은 값 2.0000($=1/(1-p)$), 전체 평균 1.0069로 원본 1.0과 일치한다."
+    },
+    {
+      "id": "7979a328-f3b3-4d6a-9d38-e50bd7ca2350",
+      "question": "stochastic depth는 블록 깊이에 따라 어떻게 적용되는가?",
+      "answer": "`dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]` 로 얕은 블록은 거의 끄지 않고 깊을수록 많이 끈다. `drop_path_rate=0.1`, depth 12면 0.000 → 0.100 으로 선형 증가한다."
+    },
+    {
+      "id": "088506c4-0e0e-4110-a50d-5c08396c87ef",
+      "question": "`Block`은 언제 `DropPath` 대신 `nn.Identity`를 쓰는가?",
+      "answer": "`self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()` 이므로, dpr이 0인 블록 0은 `Identity`, dpr=0.1인 블록 11은 `DropPath`가 된다."
+    },
+    {
+      "id": "ff1d77d1-588d-401f-ba12-c5e79c765472",
+      "question": "DINO에서 `drop_path_rate`는 어느 네트워크에 적용되는가?",
+      "answer": "student에만 적용한다(`--drop_path_rate 0.1` 기본값). teacher는 gradient가 흐르지 않으므로 정규화가 필요 없다."
+    },
+    {
+      "id": "d43b0829-0cc8-47df-8dc2-65d54dcb0fe3",
+      "question": "`Block.forward`의 두 줄 수식은?",
+      "answer": "$x \\leftarrow x + \\mathrm{DropPath}(\\mathrm{MHSA}(\\mathrm{LN}(x)))$ 와 $x \\leftarrow x + \\mathrm{DropPath}(\\mathrm{Mlp}(\\mathrm{LN}(x)))$ 다. LayerNorm이 residual 안쪽에 있는 pre-norm 구조다."
+    },
+    {
+      "id": "6feaba6a-715c-4349-a700-1cbc8ea1479c",
+      "question": "pre-norm과 post-norm의 차이와 pre-norm의 장점은?",
+      "answer": "post-norm은 $x \\leftarrow \\mathrm{LN}(x + \\mathrm{sub}(x))$ 지만 pre-norm은 LN이 서브레이어 입력에만 있다. 그 결과 $x_L = x_0 + \\sum_l f_l(x_{l-1})$ 처럼 정규화가 끼지 않은 순수 덧셈 경로가 생겨 gradient가 감쇠 없이 흐른다."
+    },
+    {
+      "id": "5e2965ef-7032-41c1-aac2-414c92ec6ba5",
+      "question": "`VisionTransformer`가 블록들을 지난 뒤 `self.norm`을 한 번 더 적용하는 이유는?",
+      "answer": "pre-norm 구조에서는 마지막 블록 출력이 정규화되지 않은 상태로 나오기 때문이다. `get_intermediate_layers`도 각 중간 출력에 이 `norm`을 적용한다."
+    },
+    {
+      "id": "fea00dc2-a876-407e-aa87-a19646ce06be",
+      "question": "`Block.forward`의 `return_attention=True` 분기는 무엇에 쓰이는가?",
+      "answer": "`y, attn = self.attn(self.norm1(x))` 직후 `attn`만 반환한다. `get_last_selfattention`이 마지막 블록만 이 모드로 호출해 시각화 데이터를 얻는다."
+    },
+    {
+      "id": "9400f7c3-790b-447b-9cf5-41c5063a4c1b",
+      "question": "한 `Block`을 통과하면 텐서가 얼마나 바뀌는가?",
+      "answer": "shape은 불변이고 상대 변화량 $\\lVert y-x\\rVert/\\lVert x\\rVert \\approx 0.21$ 이다. residual 구조라 한 블록이 조금씩만 바꾼다."
+    },
+    {
+      "id": "70f60f29-4d91-467d-b002-148f58a8f604",
+      "question": "`VisionTransformer.__init__`이 만드는 구성 요소는?",
+      "answer": "`patch_embed`, `cls_token`, `pos_embed`, `pos_drop`, `blocks`(ModuleList), `norm`(LayerNorm eps=1e-6), `head`(num_classes>0이면 Linear, 아니면 Identity)다."
+    },
+    {
+      "id": "663736a3-b841-4cd5-add7-fec881b5d344",
+      "question": "`VisionTransformer.forward`의 네 줄은?",
+      "answer": "`prepare_tokens` → `for blk in self.blocks: x = blk(x)` → `self.norm(x)` → `return x[:, 0]` 이다. CLS 토큰만 반환하고 패치 토큰은 버린다."
+    },
+    {
+      "id": "caf28b91-0c80-46da-aa0b-ed8b379aa6b9",
+      "question": "`vit_tiny`, `vit_small`, `vit_base`의 차이는?",
+      "answer": "`embed_dim`(192/384/768)과 `num_heads`(3/6/12)뿐이다. `depth=12`, `mlp_ratio=4`, `qkv_bias=True`, `eps=1e-6`은 공통이고 head_dim은 항상 64다."
+    },
+    {
+      "id": "aad3ffd4-7cc6-410a-8844-bf9850824433",
+      "question": "DINO ViT 세 크기의 실측 파라미터 수는?",
+      "answer": "patch16 기준 `vit_tiny` 5.52M, `vit_small` 21.67M, `vit_base` 85.80M이다."
+    }
+  ]
+}
