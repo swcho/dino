@@ -1,0 +1,13 @@
+Create a clean flat-design educational infographic, 16:9 landscape, on a soft off-white background with a calm palette of teal, warm orange, and dark slate gray. Sans-serif labels, generous white space, thin rounded arrows guiding the eye strictly left to right through three panels separated by thin vertical dividers.
+
+Top header bar, centered bold title: "Why DINO Attention Finds Objects". Small subtitle underneath in gray: "Local crops must predict the global view".
+
+PANEL 1 (left third) — label above the panel: "One image, many crops". Show a single simple flat-illustration photo tile: a dog silhouette standing on a green grass field with a plain sky. Overlay on this tile one large teal rectangle covering most of the image, labeled "Global crop 224px". Also overlay three small orange rectangles of different sizes and positions, each labeled tiny "Local 5-40%": one on the dog's head, one on the dog's body, one mostly on empty grass. Keep the boxes clearly outlined and not filled.
+
+PANEL 2 (center third) — label above the panel: "What stays the same?". Show three zoomed-in square tiles stacked vertically, each connected from a Panel 1 orange box by a thin curved arrow. Top tile: dog head close-up. Middle tile: dog body close-up. Bottom tile: plain grass texture. To the right of the top tile and to the right of the middle tile, place a green circular check mark, and next to each of those two check marks write the exact same two-line label: "Consistent: object" with a small Korean gloss below it in parentheses "(일관됨)". To the right of the bottom tile place a red circular X mark with the label "Varies: background" and a small Korean gloss "(매번 다름)". Under the three tiles, one short caption line: "Only the object helps". Use only these three label texts in this panel and repeat them verbatim; invent no other words.
+
+PANEL 3 (right third) — label above the panel: "Result". Show the same dog-on-grass image but rendered as an attention heatmap: the dog silhouette glowing bright yellow-orange with a warm inferno-style gradient, the grass and sky background nearly black. Under it a bold caption: "Attention follows object" with a Korean gloss "(어텐션이 객체를 따라감)". Below that a small stat chip row with two pills: "Supervised ViT 27.3" in gray and "DINO 45.9" in teal, and a tiny gray line beneath reading "VOC12 Jaccard".
+
+A single long thin arrow runs along the bottom of all three panels, labeled in small caps: "Local to global objective".
+
+Style: modern educational infographic, flat vector illustration, no photorealism, no gradients except the heatmap, crisp legible text, no extra paragraphs of text anywhere.
