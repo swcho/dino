@@ -293,3 +293,9 @@ ImageFolder (레이블 폐기)
 6. **EMA teacher** — $m: 0.996\nearrow1$, gradient 아님
 
 그리고 "왜 안 무너지나?"의 답은 항상 **centering(uniform 쪽으로) ↔ sharpening(one-hot 쪽으로)의 균형** 한 문장이다.
+
+---
+
+## 인포그래픽
+
+![nano 인포그래픽](nano.jpg)
