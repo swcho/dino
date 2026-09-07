@@ -90,7 +90,7 @@ r8 = param_report(8)
 
 hdr = f"{'항목':<16}{'patch16':>14}{'patch8':>14}{'배수':>10}"
 print(hdr)
-print("-" * len(hdr.encode("utf-8")) // 2 * "-"[:0] + "-" * 54)
+print("-" * 54)
 for key, label in [("total", "총 파라미터"), ("patch_embed", "PatchEmbed"),
                    ("pos_embed", "pos_embed"), ("rest", "나머지(블록 등)"),
                    ("N", "토큰 수 N")]:
