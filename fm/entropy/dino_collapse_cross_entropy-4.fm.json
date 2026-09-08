@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "df8c3e98-240d-42ae-9b85-16d570dca614",
+      "question": "`temp 0.1`을 쓰는 두 설정이 sharpening이 없는 상태인 이유는?",
+      "answer": "student_temp도 0.1이므로 teacher와 student의 온도가 같기 때문이다. teacher 분포가 student보다 뾰족해질 이유가 없다."
+    },
+    {
+      "id": "2852dc92-0fe3-4e38-a6ea-2106eca65b22",
+      "question": "`none` 설정(둘 다 없음)의 결과는 어떻게 나타나는가?",
+      "answer": "`h_each ≈ h_mean ≈ 2.9`로 높으면서 동시에 `top_share ≈ 0.8`이다. \"퍼져 있는데 다들 같은 데를 살짝 더 가리키는\" 상태로 `code_acc`가 chance 근처다."
+    },
+    {
+      "id": "575a0126-499a-4f49-b45b-babd9ebe8794",
+      "question": "`center only` 설정의 결과와 그 원인은?",
+      "answer": "`h_each`가 $\\log K$로 가고 loss도 $\\log K$ 근처에서 멈춘다. centering이 한 차원 지배는 막았지만(`top_share` 0.33) sharpening이 없어 분포가 균등 쪽으로 퍼진다."
+    },
+    {
+      "id": "7a351156-17f0-49a7-8f47-5e223536322c",
+      "question": "`sharp only` 설정의 결과 수치와 해석은?",
+      "answer": "`h_each = 0`(모든 점이 확신에 찬 원-핫)인데 `h_mean ≈ 1.2`, `top_share = 0.5`다. 6개 클러스터가 ~4개 코드로 합쳐지고 한 코드가 데이터 절반을 먹는, 원-핫 붕괴의 초기 모습이다."
+    },
+    {
+      "id": "d3664689-5ae8-4689-9abe-ac556de7e554",
+      "question": "`both = DINO` 설정의 결과 수치는?",
+      "answer": "`h_each ≈ 0.6`(확신), `h_mean ≈ 2.4`(차원을 골고루 사용), `top_share = 1/6`, `code_acc = 1.0`이다. 6개 코드가 6개 클러스터에 정확히 1:1로 붙는다."
+    },
+    {
+      "id": "789c121d-bf30-41ea-af5b-f1bde8ccf653",
+      "question": "`both = DINO` 결과가 self-supervised learning 관점에서 인상적인 이유는?",
+      "answer": "레이블을 한 번도 보지 않았는데 6개 클러스터를 정확히 분리해 클러스터링이 끝났기 때문이다. 순수하게 crop 간 일치만으로 구조를 찾아냈다."
+    },
+    {
+      "id": "d0f02c72-5ad3-4e63-b9e4-a67a61a10049",
+      "question": "`sharp only`와 `both`의 loss 비교가 보여주는 핵심 교훈은?",
+      "answer": "`sharp only`의 loss(≈0.2)가 `both`(≈0.8)보다 오히려 낮다. 표현 품질은 `both`가 압도적인데 loss는 반대로 말하므로, loss로 붕괴를 판단하면 안 된다."
+    },
+    {
+      "id": "778e76ca-f01d-47a5-906d-85e8cedfe281",
+      "question": "토이 실험 결과가 DINO 원본 논문의 어떤 그림과 대응하는가?",
+      "answer": "논문 Fig. 7이다. ImageNet에서 centering만 쓰면 엔트로피가 $\\log K$로 올라가고 sharpening만 쓰면 0으로 내려가는 것과 같은 그림이다."
+    },
+    {
+      "id": "b6455eb5-dda0-439c-87bd-e7be15e4b448",
+      "question": "centering은 구체적으로 무엇을 하며 어떤 붕괴를 막는가?",
+      "answer": "배치 평균의 EMA를 로짓에서 뺀다. 늘 큰 차원은 center도 커져 상쇄되므로 한 차원이 지배하는 원-핫 붕괴를 막는다."
+    },
+    {
+      "id": "c6ccd8e6-919f-40fe-b15b-f2584b6b0b72",
+      "question": "centering만 단독으로 쓰면 어떤 붕괴로 가는가?",
+      "answer": "균등 붕괴로 간다. 한 차원 지배는 막지만 분포를 뾰족하게 만드는 힘이 없어 모든 출력이 $1/K$로 평평해진다."
+    },
+    {
+      "id": "a4cea1ca-ffd4-4c59-b447-d297c611e1a2",
+      "question": "sharpening은 구체적으로 무엇이며 어떤 붕괴를 막는가?",
+      "answer": "teacher 온도 0.04를 student 온도 0.1보다 낮게 두는 것이다. teacher 분포를 뾰족하게 유지해 균등 붕괴를 막는다."
+    },
+    {
+      "id": "63ef3ebb-141e-4008-bf80-1b9dbb2754a4",
+      "question": "sharpening만 단독으로 쓰면 어떤 붕괴로 가는가?",
+      "answer": "원-핫 붕괴로 간다. 분포를 계속 뾰족하게만 밀기 때문에 결국 한 차원이 모든 입력을 지배한다."
+    },
+    {
+      "id": "2e77f14c-5243-436c-912b-ded1491ffdcd",
+      "question": "`teacher_out = F.softmax((teacher_output - self.center) / temp, dim=-1)` 한 줄에서 두 장치는 각각 어디인가?",
+      "answer": "`- self.center` 부분이 centering이고, `/ temp` 부분이 sharpening이다. 서로 반대 방향으로 밀어 균형을 만든다."
+    },
+    {
+      "id": "2e343974-4e7a-4c50-96bc-cb52aa1fdf34",
+      "question": "`--teacher_temp`가 0.04에서 warmup으로 천천히 올라가는 이유는?",
+      "answer": "초기에 sharpening이 너무 세면 원-핫 붕괴 쪽으로 밀려 학습이 불안정해지기 때문이다. 그래서 낮은 온도를 서서히 적용한다."
+    },
+    {
+      "id": "9c3cd7c6-7f70-49e7-b621-ff8b1c335e22",
+      "question": "노트북의 `MiniDINOLoss.forward`와 `update_center`는 원본 코드의 어디에 대응하는가?",
+      "answer": "`forward`는 `main_dino.py:380`의 `DINOLoss.forward`, `update_center`는 `main_dino.py:405`에 대응한다. EMA 루프는 `main_dino.py:346`의 `param_k.mul_(m).add_((1-m)*param_q)`와 같다."
+    },
+    {
+      "id": "6f96b98b-fb41-4764-9899-17054b941f76",
+      "question": "실전 함정 중 `update_center`와 분산 학습 관련 주의사항은?",
+      "answer": "원본 `update_center`는 `dist.all_reduce`를 쓰므로 프로세스 그룹이 초기화되지 않으면 centering이 깨진다. 단일 GPU 폴백 경로에서도 그룹이 잡히는지 확인해야 한다."
+    },
+    {
+      "id": "f27e463d-e72e-4b3c-91ef-8bbba1dc0571",
+      "question": "`center_momentum=0.9`와 배치 크기의 관계에서 주의할 점은?",
+      "answer": "center는 배치 통계의 EMA이므로 배치가 아주 작으면 center가 노이즈에 흔들린다. 그 결과 centering 효과가 약해져 붕괴 방지력이 떨어진다."
+    },
+    {
+      "id": "89a9250b-ceee-455e-b8fc-686ad7fdc1b9",
+      "question": "붕괴를 조기 감지하려면 학습 중 무엇을 로깅해야 하는가?",
+      "answer": "teacher 출력의 `h_each`, `h_mean`, `top_share`를 로깅하거나 `eval_knn.py`를 주기적으로 실행해야 한다. loss만 보면 붕괴를 놓친다."
+    }
+  ]
+}

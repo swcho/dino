@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "ac0db8f3-c04d-4ca5-b556-94b1b116716f",
+      "question": "`MiniDINOLoss`가 원본 `DINOLoss`에서 뺀 두 가지는?",
+      "answer": "단일 프로세스라 `dist.all_reduce`를 뺐고, teacher temperature warmup 스케줄을 상수로 고정했다. 그 외 로직은 줄 단위로 원본과 같으며, 실험용 `use_center` 스위치만 추가됐다."
+    },
+    {
+      "id": "a5c075cc-d470-4aa1-8427-41c6f6d16054",
+      "question": "`MiniDINOLoss`의 기본 student_temp와 center_momentum 값은?",
+      "answer": "`student_temp=0.1`, `center_momentum=0.9`이다. center는 `register_buffer(\"center\", torch.zeros(1, out_dim))`으로 0에서 시작한다."
+    },
+    {
+      "id": "618e33f8-5893-4791-98df-7251b0e924cb",
+      "question": "`MiniDINOLoss.forward`에서 teacher 출력에 적용되는 처리 순서는?",
+      "answer": "centering(center를 뺌) → sharpening(teacher_temp로 나눔) → softmax → detach 순이다. 붕괴 방지 두 장치가 이 한 줄에 모두 들어 있다."
+    },
+    {
+      "id": "0ebec20f-6c89-4586-b3ab-ebf40d4ffd75",
+      "question": "`MiniDINOLoss.forward`에서 student 출력은 어떻게 처리되는가?",
+      "answer": "`(student_output / self.student_temp).chunk(self.ncrops)`로 온도 0.1로 나눈 뒤 crop 개수만큼 쪼갠다. softmax는 loss 계산 시 `F.log_softmax`에서 취한다."
+    },
+    {
+      "id": "82018b77-db36-46b9-bece-85d688596e3a",
+      "question": "teacher 출력을 `.detach()` 하는 이유는?",
+      "answer": "teacher는 gradient로 학습되지 않고 student의 EMA로만 갱신되기 때문이다. detach로 teacher 쪽 경로에 gradient가 흐르지 않게 막는다."
+    },
+    {
+      "id": "583dcb62-c722-47ac-a627-e82b2ed98470",
+      "question": "teacher 출력을 `.chunk(2)`로 나누는 이유는?",
+      "answer": "teacher는 global crop 2개만 처리하기 때문이다. student는 local crop을 포함해 `ncrops`개 전부를 처리한다."
+    },
+    {
+      "id": "49b9dcfc-512c-43f6-be57-c1947da86620",
+      "question": "`MiniDINOLoss`의 이중 루프에서 `if v == iq: continue`가 하는 일은?",
+      "answer": "teacher와 student가 같은 view를 보는 쌍을 건너뛴다. 서로 다른 crop 사이에서만 교차엔트로피를 계산해야 의미 있는 학습이 되기 때문이다."
+    },
+    {
+      "id": "e663e60f-ccf8-4cb9-9b1c-f7bfeca007ac",
+      "question": "`MiniDINOLoss`에서 교차엔트로피 항은 어떤 코드로 계산되는가?",
+      "answer": "`torch.sum(-q * F.log_softmax(student_out[v], dim=-1), dim=-1)` 이다. 이는 $-\\sum_i q_i \\log p_i$의 직접 구현이며, 각 쌍의 평균을 누적해 항 개수로 나눈다."
+    },
+    {
+      "id": "ebbfb0ee-cb11-4afe-a2f6-a6d41f85d74e",
+      "question": "`update_center`가 하는 일과 원본과의 차이는?",
+      "answer": "배치 평균 `teacher_output.mean(dim=0, keepdim=True)`를 구해 `center = center * m + batch_center * (1-m)`로 EMA 갱신한다. 원본은 `sum` → `dist.all_reduce` → `/(B × world_size)` 순으로 분산 환경에서 계산한다."
+    },
+    {
+      "id": "303a5102-6247-4f6c-9a12-560a4e95d943",
+      "question": "`update_center`에 `@torch.no_grad()` 데코레이터가 붙는 이유는?",
+      "answer": "center는 학습 파라미터가 아니라 통계 버퍼이므로 gradient 계산이 필요 없기 때문이다. 불필요한 그래프 생성을 막는다."
+    },
+    {
+      "id": "4f75fbe4-9068-459c-99ea-227bfb3532b0",
+      "question": "4절의 자명해 시연에서 원-핫 붕괴를 어떻게 흉내 냈고 loss는 얼마였는가?",
+      "answer": "모든 샘플이 2번 차원에 로짓 50.0을 갖는 상수 출력 `const[:, 2] = 50.0`을 두 crop에 똑같이 넣었다. loss는 0으로 완벽한 점수가 나온다."
+    },
+    {
+      "id": "8718b966-4e0c-4d91-a1b3-4984e09ff55b",
+      "question": "4절에서 균등 붕괴를 흉내 냈을 때 loss는 얼마였는가?",
+      "answer": "모든 로짓이 0인 `torch.zeros(2*B, out_dim)`을 넣으면 loss는 $\\log 8 \\approx 2.0794$가 된다. 이때 KL은 0이다."
+    },
+    {
+      "id": "e746c8fb-c0c5-472d-b988-b210975b7909",
+      "question": "입력마다 다른 원-핫을 내는 '건강한' 경우의 loss는 붕괴한 경우와 어떻게 다른가?",
+      "answer": "똑같이 0이다. `F.one_hot(torch.arange(B) % out_dim, out_dim) * 50.0`인 건강한 출력과 상수 원-핫 붕괴 출력이 같은 loss를 낸다."
+    },
+    {
+      "id": "472d5efb-1f71-46c7-a4dd-4475cb28cfb7",
+      "question": "loss가 붕괴를 감지하지 못하는 근본적인 이유는?",
+      "answer": "loss는 \"입력이 출력을 바꾸는가\"를 전혀 보지 않고, teacher와 student 출력이 서로 일치하는지만 보기 때문이다. 그래서 붕괴한 모델과 잘 학습된 모델을 loss로 구분할 수 없다."
+    },
+    {
+      "id": "067e6372-063c-49dd-815e-c004fb1e3381",
+      "question": "loss로 붕괴를 구분할 수 없다는 사실이 실전에 주는 함의는?",
+      "answer": "학습 손실 대신 k-NN 평가(`eval_knn.py`)를 따로 주기적으로 돌려야 한다는 것이다. 또는 teacher 출력의 엔트로피/코드 사용 통계를 로깅해 조기 감지해야 한다."
+    },
+    {
+      "id": "dc370c09-9e4f-4eed-8dbe-6ae6d18cd9fa",
+      "question": "왜 self-distillation 학습은 자연스럽게 붕괴 쪽으로 끌리는가?",
+      "answer": "두 네트워크가 같은 이미지의 다른 crop을 보고 서로 맞추기만 하면 되므로, \"아무것도 안 보고 항상 같은 답\"이 가장 쉬운 합의점이기 때문이다."
+    },
+    {
+      "id": "1be6c064-9dfa-4109-89ce-118c4f02ef42",
+      "question": "원-핫 붕괴 상태에서 $h(q)$와 배치 평균 분포의 엔트로피는 각각 어떻게 되는가?",
+      "answer": "둘 다 0으로 간다. 모든 입력이 같은 차원 하나로 몰리기 때문에 개별 분포도 뾰족하고 평균 분포도 뾰족하다."
+    },
+    {
+      "id": "d022b632-dccd-4cea-b53b-7959471f19ed",
+      "question": "균등 붕괴 상태에서 $h(q)$와 배치 평균 분포의 엔트로피는 각각 어떻게 되는가?",
+      "answer": "둘 다 $\\log K$로 간다. 모든 입력이 $1/K$씩 내므로 개별 분포도 평균 분포도 균등하다."
+    }
+  ]
+}

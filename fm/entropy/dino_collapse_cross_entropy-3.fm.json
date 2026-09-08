@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "5acfe0ff-dac5-42cc-b17d-d057c5b237e8",
+      "question": "건강한 상태의 개별 엔트로피와 평균 분포 엔트로피는 어떤 조합인가?",
+      "answer": "입력마다 다른, 적당히 뾰족한 분포를 내므로 개별 엔트로피는 중간(낮은 편)이고 평균 분포의 엔트로피는 높다. 이 짝이 건강함의 지표다."
+    },
+    {
+      "id": "675e7c94-014d-4975-bcd8-7fc2640c6396",
+      "question": "5절 토이 실험의 데이터는 어떻게 구성되는가?",
+      "answer": "2D 평면에 반지름 3.0의 원 위에 6개 클러스터를 배치하고 클러스터마다 128개 점(spread=0.3)을 만든다. \"이미지\" 하나가 점 하나에 대응한다."
+    },
+    {
+      "id": "73c942a3-eb6e-4602-bd7e-dd5274b370ea",
+      "question": "토이 실험에서 crop(증강)은 어떻게 만들며 노이즈 크기는 왜 그렇게 정했나?",
+      "answer": "점에 가우시안 노이즈 $\\sigma=0.7$을 더해 만든다. 노이즈가 클러스터 간격의 1/4쯤 되어 다른 클러스터의 crop이 가끔 겹치는데, 실제 crop이 배경만 잡을 때와 비슷한 난이도를 만들기 위해서다."
+    },
+    {
+      "id": "c4c16b61-80de-471e-b4fd-368e89060aff",
+      "question": "토이 실험의 student/teacher 네트워크 구조와 EMA 계수는?",
+      "answer": "2→128→128→32 크기의 작은 MLP(GELU 활성화)를 쓴다. teacher는 student의 EMA이며 모멘텀 `m=0.99`로 원본 `main_dino.py:346`과 같은 업데이트를 한다."
+    },
+    {
+      "id": "dc51e636-57fb-44b0-9711-d45a4e5c2f2a",
+      "question": "토이 실험에서 `out_dim=32`일 때 균등 붕괴의 기준선 값은?",
+      "answer": "$\\log 32 \\approx 3.47$이다. 엔트로피가 이 값에 붙으면 균등 붕괴로 판단한다."
+    },
+    {
+      "id": "ff39c9b8-adf7-4dd6-aa84-180907c3fd8d",
+      "question": "토이 실험에서 \"코드(prototype)\"란 무엇인가?",
+      "answer": "teacher가 낸 분포 $q$의 argmax 인덱스를 그 점의 코드라고 부른다. 어떤 프로토타입에 그 점이 할당됐는지를 나타낸다."
+    },
+    {
+      "id": "9e5a1449-aec6-48a8-9182-b7f6332d6cbe",
+      "question": "지표 `h_each`는 무엇을 측정하며 각 붕괴에서 어떻게 되는가?",
+      "answer": "점 하나하나의 분포 엔트로피 평균으로 \"확신하는가\"를 본다. 원-핫 붕괴에서는 0으로, 균등 붕괴에서는 $\\log K$로 간다."
+    },
+    {
+      "id": "8c2a5ab8-3fce-48b8-8057-10c8f06aea92",
+      "question": "지표 `h_mean`은 무엇을 측정하며 건강할 때 어떤 값에 가까운가?",
+      "answer": "전체 점의 평균 분포의 엔트로피로 \"차원을 골고루 쓰는가\"를 본다. 건강하면 log(클러스터 수) 근처, 즉 토이에서는 $\\log 6 \\approx 1.79$ 근처가 된다."
+    },
+    {
+      "id": "b2c8b677-2eaa-4f58-879d-7f49a56d1dc7",
+      "question": "지표 `top_share`의 정의와 각 상태에서의 값은?",
+      "answer": "가장 많이 쓰인 코드 하나가 차지하는 점의 비율이다. 원-핫 붕괴에서는 1.0으로 치솟고, 건강하면 클러스터가 6개일 때 $1/6 \\approx 0.17$이 된다."
+    },
+    {
+      "id": "1aa9beb9-ec01-4a44-b1eb-1513fe31806e",
+      "question": "지표 `code_acc`는 어떻게 계산하며 무엇을 뜻하는가?",
+      "answer": "각 코드에 속한 점들의 클러스터 레이블 다수결로 클러스터를 맞히는 정확도다. 붕괴하면 chance인 1/6로 떨어지고 건강하면 1.0에 도달한다."
+    },
+    {
+      "id": "1cf88fa6-313f-4416-8828-076fe7db6a8b",
+      "question": "`h_each`와 `h_mean`을 짝으로 봐야 하는 이유는?",
+      "answer": "`h_each` 낮고 `h_mean` 높으면 \"점마다 다른 차원을 확신 있게 고른다\" = 건강이다. 둘 다 낮으면 원-핫 붕괴, 둘 다 높으면 균등 붕괴다."
+    },
+    {
+      "id": "5e8d12d7-f3aa-479b-95c9-63d3ff193f1a",
+      "question": "이 토이 실험에서 k-NN 정확도를 지표로 쓰지 못하는 이유는?",
+      "answer": "입력이 2D이고 backbone이 2층이라 랜덤 초기화 상태에서도 이웃 구조가 보존되어 항상 1.0이 나오기 때문이다. 실제 DINO에서는 head의 붕괴가 12층 transformer 전체로 번져 k-NN이 무너진다."
+    },
+    {
+      "id": "4928e408-fe33-41d9-9d47-54ea19514d82",
+      "question": "토이 실험에서 k-NN 대신 무엇으로 정보 손실을 측정하는가?",
+      "answer": "`code_acc`를 쓴다. loss가 실제로 보는 출력 $q$에서 클러스터 정보가 사라지는지를 직접 확인하는 지표다."
+    },
+    {
+      "id": "3dd7c7e0-bef8-40eb-85a5-46146228a692",
+      "question": "`code_metrics` 함수는 어떻게 `top_share`와 정확도를 계산하는가?",
+      "answer": "`q.argmax(-1)`로 코드를 구하고 `bincount`의 최댓값을 전체 개수로 나눠 `top_share`를 얻는다. 정확도는 코드별로 레이블 `bincount().max()`를 합해 전체 샘플 수로 나눈다."
+    },
+    {
+      "id": "e2927e66-ec06-45c6-aea9-8561bdd4163f",
+      "question": "`train` 함수의 주요 하이퍼파라미터는?",
+      "answer": "`steps=1500`, `out_dim=32`, EMA `m=0.99`, `lr=1e-3`(Adam), `batch=256`, `log_every=25`이다."
+    },
+    {
+      "id": "853d7722-07e2-49fd-be4a-411471bc0070",
+      "question": "`train` 함수에서 한 스텝의 view는 어떻게 만들어지는가?",
+      "answer": "배치 인덱스를 뽑아 `torch.cat([augment(X[idx]), augment(X[idx])])`로 같은 점의 서로 다른 노이즈 버전 2개(global crop 2개)를 만든다."
+    },
+    {
+      "id": "b681a86f-224a-4aa0-8235-a7e8fd1a5d70",
+      "question": "`train` 함수에서 teacher 파라미터는 어떻게 관리되는가?",
+      "answer": "`copy.deepcopy(student)`로 초기화하고 모든 파라미터에 `requires_grad_(False)`를 건다. 매 스텝 optimizer step 뒤에 `pt.mul_(m).add_((1-m)*ps)`로 EMA 갱신한다."
+    },
+    {
+      "id": "ee84acb7-b015-41ab-a984-2dcc2cb23b59",
+      "question": "5절 실험에서 비교한 4가지 설정은 무엇인가?",
+      "answer": "none(center off, temp 0.1), center only(center on, temp 0.1), sharp only(center off, temp 0.04), both = DINO(center on, temp 0.04)이다."
+    }
+  ]
+}

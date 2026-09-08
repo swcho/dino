@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "acfdd4c8-d910-4985-bdd5-4caa4460bcfc",
+      "question": "이 노트북이 다루는 주제는 무엇이며, 어떤 원본 코드를 대상으로 하는가?",
+      "answer": "DINO의 교차엔트로피 손실과 붕괴(collapse) 현상을 숫자와 그림으로 이해하는 노트북이다. `main_dino.py`의 `DINOLoss`(L363)가 하는 일을 토이 모델로 재현해 붕괴가 실제로 일어나는 것을 관찰한다."
+    },
+    {
+      "id": "bca374db-07b1-4152-81f1-09a30027a1f9",
+      "question": "확률분포 $p$의 엔트로피 $h(p)$의 정의는?",
+      "answer": "$h(p) = -\\sum_i p_i \\log p_i$ 이다. 분포가 얼마나 퍼져 있는지를 숫자 하나로 나타낸다."
+    },
+    {
+      "id": "af8e779b-1186-4825-921c-60ea005431b0",
+      "question": "원-핫 분포와 균등 분포의 엔트로피 값은 각각 얼마인가?",
+      "answer": "한 칸에 확률이 몰린 원-핫 분포는 $h = 0$이고, $K$칸에 골고루 퍼진 균등 분포는 $h = \\log K$로 최댓값이다."
+    },
+    {
+      "id": "a1f827ab-07bd-40cf-a80e-90ef38732a76",
+      "question": "실제 DINO에서 출력 차원 $K$는 얼마이며, 이 노트북에서는 왜 다르게 설정했는가?",
+      "answer": "DINO에서 $K$는 `--out_dim` = 65536이다. 노트북에서는 눈으로 확인할 수 있도록 $K=8$로 줄여서 실험한다."
+    },
+    {
+      "id": "631ddc06-e5c2-4cbc-8488-1cb9e0b777e0",
+      "question": "노트북의 `entropy(p)` 함수 구현에서 `clamp_min(1e-12)`을 쓰는 이유는?",
+      "answer": "`-(p * p.clamp_min(1e-12).log()).sum(-1)` 형태로 구현하는데, 확률이 0일 때 $\\log 0 = -\\infty$가 되는 것을 막기 위해 최솟값을 아주 작은 양수로 잘라준다."
+    },
+    {
+      "id": "bba5e3e2-af9d-4fd9-971c-e24e436a876b",
+      "question": "온도(temperature) $\\tau$를 적용한 softmax의 수식은?",
+      "answer": "$p_i = \\frac{\\exp(z_i/\\tau)}{\\sum_j \\exp(z_j/\\tau)}$ 이다. softmax를 취하기 전에 로짓을 $\\tau$로 나눈다."
+    },
+    {
+      "id": "edb6914a-078f-4380-ba78-052f43993a6f",
+      "question": "온도 $\\tau$가 작아지면 분포와 엔트로피는 어떻게 변하는가?",
+      "answer": "$\\tau$가 작을수록 큰 로짓이 더 두드러져 분포가 뾰족(sharp)해지고 엔트로피가 낮아진다. 반대로 $\\tau$가 크면 차이가 뭉개져 분포가 평평해지고 엔트로피가 높아진다."
+    },
+    {
+      "id": "30ff1f68-3d79-43fd-b16b-db32106f55e0",
+      "question": "DINO의 sharpening은 구체적으로 무엇을 하는 조작인가?",
+      "answer": "teacher 출력에 낮은 온도(0.04)를 걸어 분포를 뾰족하게 만드는 것이다. 즉 온도로 엔트로피를 낮추는 조작 그 자체다."
+    },
+    {
+      "id": "ada987f8-ea81-42b8-89d1-52ca38fccfaf",
+      "question": "교차엔트로피 $H(q,p)$의 정의와 각 분포의 역할은?",
+      "answer": "$H(q, p) = -\\sum_i q_i \\log p_i$ 이다. $q$는 정답 취급하는 target 분포이고 $p$는 모델의 예측이다."
+    },
+    {
+      "id": "92d4abe4-fbd7-4ea6-af38-b73e808777e5",
+      "question": "지도학습에서 교차엔트로피가 $-\\log p_{정답}$ 하나로 줄어드는 이유는?",
+      "answer": "$q$가 원-핫 레이블이라 정답 인덱스를 제외한 모든 $q_i$가 0이기 때문이다. 따라서 합에서 정답 항 하나만 살아남는다."
+    },
+    {
+      "id": "678ec1b9-0e58-465b-ab28-d08094cf111b",
+      "question": "레이블이 없는 DINO에서는 교차엔트로피의 $q$ 자리를 무엇이 대신하는가?",
+      "answer": "teacher 네트워크의 softmax 출력이 $q$ 자리를 대신한다. 즉 teacher가 만든 분포를 정답처럼 취급해 student를 채점한다."
+    },
+    {
+      "id": "b5f7aa5f-0076-4699-b6ef-6349df7db9fd",
+      "question": "교차엔트로피를 엔트로피와 KL로 분해한 항등식은?",
+      "answer": "$H(q, p) = h(q) + D_{KL}(q \\| p)$ 이다. 앞항은 teacher 분포의 엔트로피, 뒷항은 student가 teacher와 다른 정도다."
+    },
+    {
+      "id": "321a0b34-9209-4297-8eab-e2aa410f3e4f",
+      "question": "$H(q,p) = h(q) + KL(q\\|p)$ 분해가 드러내는 loss를 낮추는 두 가지 경로는?",
+      "answer": "(a) $p \\to q$로 student가 teacher를 따라가는 길과, (b) $h(q)$를 낮춰 teacher 분포 자체를 뾰족하게 만드는 길이다. 우리가 원하는 것은 (a)뿐이다."
+    },
+    {
+      "id": "a7e3ce5d-5321-4368-8fde-4c927519dec2",
+      "question": "왜 (b) 경로, 즉 $h(q)$를 낮추는 길이 DINO에서 실제로 열려 있는가?",
+      "answer": "teacher가 student의 EMA이기 때문이다. student가 변하면 teacher도 따라 변하므로 teacher 분포 자체가 뾰족해지는 방향으로 학습이 흘러갈 수 있고, 이것이 붕괴의 통로다."
+    },
+    {
+      "id": "48aa8128-05c6-4537-b94c-0be5d4863e80",
+      "question": "KL divergence $D_{KL}(q\\|p)$를 코드로 어떻게 계산하는가?",
+      "answer": "`(q * (q.clamp_min(1e-12).log() - p.clamp_min(1e-12).log())).sum(-1)` 로 계산한다. 즉 $\\sum_i q_i(\\log q_i - \\log p_i)$ 이다."
+    },
+    {
+      "id": "82a76025-d360-435c-8fd9-31f512b2fdfe",
+      "question": "`q=uniform, p=uniform`인 경우 KL과 loss 값은 각각 어떻게 되는가?",
+      "answer": "KL은 0이지만 loss는 $\\log 8 = 2.079$이다. student가 teacher를 완벽히 따라갔지만 teacher가 아무 정보도 주지 않는 상태다."
+    },
+    {
+      "id": "19c0194e-fbcd-40dd-88ea-f8d38b4e1256",
+      "question": "`q=one_hot, p=one_hot`(둘 다 같은 원-핫)일 때 loss는 얼마이며 왜 문제인가?",
+      "answer": "loss가 정확히 0인 완벽한 점수다. 입력이 무엇이든 이 한 쌍만 내면 되기 때문에 자명해(치트)가 되어 버린다."
+    },
+    {
+      "id": "5ad0cbc6-f0a1-4438-b9eb-454a0a24dbdf",
+      "question": "DINO에서 말하는 두 가지 붕괴 유형은 무엇인가?",
+      "answer": "모든 입력이 같은 한 차원으로 몰리는 **원-핫 붕괴**와, 모든 입력이 $1/K$씩 균등해지는 **균등 붕괴**다. 두 붕괴는 서로 반대 방향이다."
+    }
+  ]
+}
