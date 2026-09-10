@@ -1,1 +1,2 @@
 exit
+tensorboard --logdir out/walkthrough_tb

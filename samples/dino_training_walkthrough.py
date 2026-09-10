@@ -766,6 +766,10 @@ print(f"\nEMA 전 max|θs-θt| = {d0:.3e}  →  후 {d1:.3e}  (m={m:.5f} 이라 
 # | DINO | O | 0.04 | 건강 |
 # | centering 제거 | X | 0.04 | 단일 프로토타입 쪽으로 붕괴 |
 # | sharpening 제거 | O | 0.10 $(= \tau_s)$ | uniform 붕괴 |
+#
+# 진단량은 `h` 딕셔너리에 모아 아래에서 matplotlib 으로 그리고, `tensorboard` 패키지가 있으면
+# 같은 값을 `out/walkthrough_tb/{dino,no_centering,no_sharpening}/` 에도 남긴다.
+# 태그 이름은 `main_dino.py` 의 `TensorBoardLogger` 와 같아서 실제 학습 로그와 나란히 읽을 수 있다.
 
 # %%
 BATCH, NEPOCHS = 8, 3
@@ -774,7 +778,17 @@ loader = torch.utils.data.DataLoader(
     pin_memory=(DEVICE == "cuda"), drop_last=True)
 niter = len(loader)
 
-def run_mini(use_center=True, teacher_temp=0.04, epochs=NEPOCHS, seed=0):
+# ── TensorBoard (선택). 세 설정을 run 별 하위 디렉토리에 남겨 한 화면에서 겹쳐 본다.
+#    태그 이름은 main_dino.TensorBoardLogger 와 같게 맞춰서 실제 학습 로그와 나란히 읽을 수 있다.
+import shutil
+TB_DIR = REPO / "out" / "walkthrough_tb"
+try:
+    from torch.utils.tensorboard import SummaryWriter
+except ImportError:
+    SummaryWriter = None
+    print("! tensorboard 미설치 — `pip install tensorboard` 후 다시 돌리면 이벤트 파일도 남습니다")
+
+def run_mini(use_center=True, teacher_temp=0.04, epochs=NEPOCHS, seed=0, tb_name=None):
     # train_one_epoch 과 같은 순서. DDP 없음, teacher_temp 는 warmup 없이 고정.
     utils.fix_random_seeds(seed)
     st, te, _ = build_pair()
@@ -786,6 +800,14 @@ def run_mini(use_center=True, teacher_temp=0.04, epochs=NEPOCHS, seed=0):
     wd_s = utils.cosine_scheduler(0.04, 0.4, epochs, niter)
     mo_s = utils.cosine_scheduler(0.996, 1.0, epochs, niter)
     scaler = torch.cuda.amp.GradScaler() if DEVICE == "cuda" else None
+
+    # TensorBoard writer (tb_name 이 있고 패키지가 있을 때만). 재실행 시 이전 이벤트는 지운다.
+    tb = None
+    if tb_name and SummaryWriter is not None:
+        shutil.rmtree(TB_DIR / tb_name, ignore_errors=True)
+        tb = SummaryWriter(str(TB_DIR / tb_name))
+        tb.add_text("setting", f"centering={use_center}, teacher_temp={teacher_temp}, "
+                               f"epochs={epochs}, batch={BATCH}, out_dim={OUT_DIM}", 0)
 
     h = {k: [] for k in ["loss", "H_t", "top1", "uniq", "cnorm"]}
     for epoch in range(epochs):
@@ -807,13 +829,13 @@ def run_mini(use_center=True, teacher_temp=0.04, epochs=NEPOCHS, seed=0):
             opt.zero_grad()
             if scaler is None:
                 loss.backward()                                              # 8)
-                utils.clip_gradients(st, 3.0)                                # 9)
+                norms = utils.clip_gradients(st, 3.0)                        # 9)
                 utils.cancel_gradients_last_layer(epoch, st, 1)              # 10)
                 opt.step()                                                   # 11)
             else:
                 scaler.scale(loss).backward()
                 scaler.unscale_(opt)
-                utils.clip_gradients(st, 3.0)
+                norms = utils.clip_gradients(st, 3.0)
                 utils.cancel_gradients_last_layer(epoch, st, 1)
                 scaler.step(opt)
                 scaler.update()
@@ -829,14 +851,34 @@ def run_mini(use_center=True, teacher_temp=0.04, epochs=NEPOCHS, seed=0):
                 h["top1"].append(p_t.max(-1).values.mean().item())
                 h["uniq"].append(p_t.argmax(-1).unique().numel())
                 h["cnorm"].append(dl_.center.norm().item())
+
+                if tb is not None:                       # h 와 같은 값을 같은 태그로 TensorBoard 에
+                    tb.add_scalar("train/loss", h["loss"][-1], gi)
+                    tb.add_scalar("teacher/entropy", h["H_t"][-1], gi)
+                    tb.add_scalar("teacher/entropy_uniform", math.log(OUT_DIM), gi)
+                    tb.add_scalar("teacher/max_prob", h["top1"][-1], gi)
+                    tb.add_scalar("teacher/unique_prototypes", h["uniq"][-1], gi)
+                    tb.add_scalar("teacher/center_norm", h["cnorm"][-1], gi)
+                    tb.add_scalar("schedule/lr", lr_s[gi], gi)
+                    tb.add_scalar("schedule/wd", wd_s[gi], gi)
+                    tb.add_scalar("schedule/teacher_momentum", m, gi)
+                    tb.add_scalar("schedule/teacher_temp", teacher_temp, gi)
+                    tb.add_scalar("grad/total_norm", torch.tensor(norms).norm().item(), gi)
+        if tb is not None:                               # epoch 단위: 어떤 prototype 이 쓰이는가
+            tb.add_histogram("teacher/prototype_argmax", p_t.argmax(-1), epoch)
+            tb.add_histogram("teacher/center", dl_.center, epoch)
+    if tb is not None:
+        tb.close()
     return h, st, te
 
 t0 = time.time()
 runs = {}
-runs["DINO (center + sharpen)"] = run_mini(True, 0.04)
-runs["centering 제거"] = run_mini(False, 0.04)
-runs["sharpening 제거 (tau_t=tau_s)"] = run_mini(True, 0.10)
+runs["DINO (center + sharpen)"] = run_mini(True, 0.04, tb_name="dino")
+runs["centering 제거"] = run_mini(False, 0.04, tb_name="no_centering")
+runs["sharpening 제거 (tau_t=tau_s)"] = run_mini(True, 0.10, tb_name="no_sharpening")
 print(f"3 x ({NEPOCHS} epoch x {niter} iter) = {3*NEPOCHS*niter} step, {time.time()-t0:.0f}s\n")
+if SummaryWriter is not None:
+    print(f"TensorBoard: tensorboard --logdir {TB_DIR}   (run 3개가 겹쳐 그려진다)\n")
 
 hist, student, teacher = runs["DINO (center + sharpen)"]   # 이후 절에서 재사용
 
@@ -1077,7 +1119,16 @@ print("      --image_size 480 480 --threshold 0.6 --output_dir out/dino_attn")
 # # 실제 학습 (8 GPU 1노드)
 # python -m torch.distributed.launch --nproc_per_node=8 main_dino.py \
 #     --arch vit_small --data_path /path/to/imagenet/train --output_dir /path/to/save
+#
+# # 학습 과정 보기 (--tensorboard 기본 on, <output_dir>/tensorboard/ 에 기록)
+# tensorboard --logdir out/dino_train/tensorboard
 # ```
+#
+# TensorBoard 에는 이 노트북 §11 의 `h` 딕셔너리와 같은 지표들(`teacher/entropy`, `teacher/max_prob`,
+# `teacher/unique_prototypes`, `teacher/center_norm`)에 더해 스케줄 4종(§8), grad norm(§10),
+# `ema/param_dist`(§9), multi-crop 이미지(§3), 교사 CLS attention(§13) 이 기록된다.
+# §11 의 미니 루프도 같은 태그로 `out/walkthrough_tb/` 에 남기므로
+# `tensorboard --logdir out` 하나로 둘을 함께 볼 수 있다. 태그별 읽는 법은 [SAMPLES.md](../SAMPLES.md) §3 참고.
 #
 # - 실행 샘플 전체: [SAMPLES.md](../SAMPLES.md)
 # - ML 심층 분석(파라미터 실측, 데이터 흐름 다이어그램): [docs/analysis/2026-09-04-ml-analysis.md](../docs/analysis/2026-09-04-ml-analysis.md)

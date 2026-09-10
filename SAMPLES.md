@@ -99,11 +99,38 @@ python main_dino.py \
 ```
 
 `utils.init_distributed_mode` 가 단일 GPU 실행을 지원하므로 `torchrun` 없이 그냥 `python` 으로 돌아갑니다.
-2 epoch / 120장 기준 약 4초, 피크 VRAM 1.4GB. 결과는 `checkpoint.pth` 와 `log.txt`.
+2 epoch / 120장 기준 약 4초, 피크 VRAM 1.4GB. 결과는 `checkpoint.pth`, `log.txt`, `tensorboard/`.
 
 > **함정:** `--warmup_epochs`(기본 10) 가 `--epochs` 보다 크면
 > [utils.py:197](utils.py#L197) 의 `assert len(schedule) == epochs * niter_per_ep` 에서 죽습니다.
 > 짧게 돌릴 땐 `--warmup_epochs 0` 을 반드시 주세요.
+
+### TensorBoard 로 학습 과정 들여다보기
+
+`--tensorboard` 는 기본 켜져 있고(`tensorboard` 패키지가 없으면 조용히 꺼짐),
+`<output_dir>/tensorboard/` 에 이벤트 파일을 씁니다. 스칼라는 `--tb_log_freq`(기본 10) iteration마다,
+이미지·히스토그램은 epoch마다 기록합니다. 재시작(resume)하면 `purge_step` 으로 중복 구간을 정리합니다.
+
+```bash
+pip install tensorboard          # 최초 1회
+tensorboard --logdir out/dino_train/tensorboard
+```
+
+| 탭 / 태그 | 보는 법 |
+|---|---|
+| `train/loss`, `epoch/*` | `log.txt` 와 같은 숫자. iteration 단위 vs epoch 평균 |
+| `schedule/lr`, `wd`, `teacher_momentum`, `teacher_temp` | 스케줄 4종이 실제로 어떻게 적용됐는지 |
+| `grad/total_norm`, `grad/clipped_frac` | clipping 이전 학생 grad norm, clip 된 텐서 비율 (`--clip_grad 0` 이면 없음) |
+| `teacher/entropy` vs `teacher/entropy_uniform` | 교사 분포 엔트로피. 0 → one-hot 붕괴, log K 에 붙으면 uniform 붕괴 |
+| `teacher/max_prob`, `teacher/unique_prototypes` | sharpening 강도, 배치에서 쓰인 prototype 수 (1 이면 붕괴) |
+| `teacher/center_norm`, `teacher/center` (히스토그램) | centering 이 얼마나 일하고 있는지 |
+| `teacher/prototype_argmax` (히스토그램) | 어떤 prototype 들이 쓰이는지 분포 |
+| `student/entropy` | 같은 global crop 에 대한 학생 분포 엔트로피 (교사보다 높아야 정상) |
+| `ema/param_dist` | ‖θ_teacher − θ_student‖. momentum 이 1 로 갈수록 벌어진 뒤 정체 |
+| `data/global_crops`, `data/local_crops` (IMAGES) | 그 epoch 첫 배치 8장이 어떤 view 로 잘려 들어갔는지 |
+| `attention/input`, `attention/teacher_cls` (IMAGES) | 교사 마지막 층 CLS attention, 행=이미지 열=head (ViT 계열만) |
+
+각 항목이 왜 중요한지는 [samples/dino_training_walkthrough.py](samples/dino_training_walkthrough.py) §6~§9 에 설명이 있습니다.
 
 실제 ImageNet 학습(8 GPU 노드 1대):
 
